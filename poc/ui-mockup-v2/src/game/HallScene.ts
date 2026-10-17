@@ -9,12 +9,15 @@ export type HallProject = { no: string; title: string; short: string; category: 
 export type BoothInfo = HallProject & { people: number };
 export type Hearing = { people: string[]; inBooth: string | null };
 
-export const HallEvents = { READY: "hall-ready", ENTER: "hall-booth-enter", LEAVE: "hall-booth-leave", HEARING: "hall-hearing" } as const;
+export const HallEvents = { READY: "hall-ready", ENTER: "hall-booth-enter", LEAVE: "hall-booth-leave", HEARING: "hall-hearing", PEEK: "hall-booth-peek" } as const;
 
 const T = 32;
 const SPEED = 150;
+const FAST = 3; // "go to booth" from the list walks 3× faster (still a walk, not a warp)
 const NPC_SPEED = 64;
 const RANGE = 5 * T; // hearing range outside booths (same as Gather)
+const WALK_DWELL = 600; // stop on a booth carpet = join now · still walking on it = join after this (ms) · cutting across doesn't connect
+const PEEK = 2.5 * T; // standing this close to a booth (outside it) shows its card
 const SCALE = 0.62; // 80px TestUI frames → ~50px characters on 32px tiles
 const DIRS: Dir[] = ["down", "up", "left", "right"]; // sheet rows
 const CHAR_COUNT = 14;
@@ -34,6 +37,7 @@ export class HallScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
   private playerLabel!: Phaser.GameObjects.Text;
   private bubble: { text: Phaser.GameObjects.Text; lift: number } | null = null;
+  private fast = false;
   private playerDir: Dir = "down";
   private ring!: Phaser.GameObjects.Graphics;
   private nav!: NavGrid;
@@ -47,6 +51,8 @@ export class HallScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<"W" | "A" | "S" | "D", Phaser.Input.Keyboard.Key>;
   private current: Slot | null = null;
+  private onCarpet: { slot: Slot; since: number } | null = null;
+  private peekKey = "";
   private hearingKey = "";
 
   constructor() {
@@ -125,6 +131,7 @@ export class HallScene extends Phaser.Scene {
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       const w = pointer.positionToCamera(cam) as Phaser.Math.Vector2;
       this.path = this.nav.find(this.player.x, this.player.y - 4, w.x, w.y) ?? [];
+      this.fast = false;
     });
     this.game.events.emit(HallEvents.READY);
   }
@@ -133,7 +140,7 @@ export class HallScene extends Phaser.Scene {
   setZoom(z: number) { this.cameras.main.setZoom(z); }
   goToBooth(no: string) {
     const s = this.slots.find((x) => x.project?.no === no);
-    if (s) this.path = this.nav.find(this.player.x, this.player.y - 4, s.rect.centerX, s.rect.bottom - 18) ?? [];
+    if (s) { this.path = this.nav.find(this.player.x, this.player.y - 4, s.rect.centerX, s.rect.bottom - 18) ?? []; this.fast = true; }
   }
   setPlayerName(name: string) { this.playerLabel.setText(name); }
 
@@ -210,15 +217,15 @@ export class HallScene extends Phaser.Scene {
       Number(this.cursors.right.isDown || this.wasd.D.isDown) - Number(this.cursors.left.isDown || this.wasd.A.isDown),
       Number(this.cursors.down.isDown || this.wasd.S.isDown) - Number(this.cursors.up.isDown || this.wasd.W.isDown),
     );
-    if (dir.lengthSq() > 0) this.path = [];
+    if (dir.lengthSq() > 0) { this.path = []; this.fast = false; }
     else if (this.path.length) {
       const to = new Phaser.Math.Vector2(this.path[0].x - this.player.x, this.path[0].y - this.player.y);
-      if (to.length() < 4) this.path.shift();
+      if (to.length() < (this.fast ? 8 : 4)) { this.path.shift(); if (!this.path.length) this.fast = false; }
       else dir.copy(to);
     }
     const moving = dir.lengthSq() > 0;
     if (moving) {
-      dir.normalize().scale(SPEED);
+      dir.normalize().scale(this.fast ? SPEED * FAST : SPEED);
       body.setVelocity(dir.x, dir.y);
       this.playerDir = Math.abs(dir.x) > Math.abs(dir.y) ? (dir.x > 0 ? "right" : "left") : dir.y > 0 ? "down" : "up";
     } else body.setVelocity(0, 0);
@@ -230,17 +237,35 @@ export class HallScene extends Phaser.Scene {
 
     for (const n of this.npcs) this.updateNpc(n, delta);
 
-    const inside = this.slots.find((s) => s.project && s.rect.contains(this.player.x, this.player.y)) ?? null;
-    if (inside !== this.current) {
-      if (this.current) this.game.events.emit(HallEvents.LEAVE);
-      this.current = inside;
-      if (inside) this.game.events.emit(HallEvents.ENTER, { ...inside.project!, people: this.inSlot(inside).length + 1 } satisfies BoothInfo);
+    // booth: stop on the carpet (or arrive from the booth list) → join at once · keep walking on it → join after WALK_DWELL · step off → leave at once
+    const carpet = this.slots.find((s) => s.project && s.rect.contains(this.player.x, this.player.y)) ?? null;
+    if (carpet !== this.onCarpet?.slot) {
+      this.onCarpet = carpet ? { slot: carpet, since: this.time.now } : null;
+      if (this.current && this.current !== carpet) { this.current = null; this.game.events.emit(HallEvents.LEAVE); }
     }
-    this.ring.setVisible(!inside);
+    const stopped = !moving && !this.path.length; // between waypoints of a path isn't a stop
+    if (this.onCarpet && !this.current && (stopped || this.time.now - this.onCarpet.since >= WALK_DWELL)) {
+      const s = this.onCarpet.slot;
+      this.current = s;
+      this.game.events.emit(HallEvents.ENTER, { ...s.project!, people: this.inSlot(s).length + 1 } satisfies BoothInfo);
+    }
+    this.ring.setVisible(!this.current);
+    this.updatePeek(carpet);
     this.updateHearing();
   }
 
   private inSlot(s: Slot) { return this.npcs.filter((n) => s.rect.contains(n.sprite.x, n.sprite.y)); }
+
+  // near a booth but not on it: tell the page which one (name, Live, how many inside) before you step in
+  private updatePeek(carpet: Slot | null) {
+    const dist = (r: Phaser.Geom.Rectangle) => Math.hypot(Math.max(r.x - this.player.x, 0, this.player.x - r.right), Math.max(r.y - this.player.y, 0, this.player.y - r.bottom));
+    const near = carpet ? null : this.slots.filter((s) => s.project && dist(s.rect) < PEEK).sort((a, b) => dist(a.rect) - dist(b.rect))[0] ?? null;
+    const n = near ? this.inSlot(near).length : 0;
+    const key = near ? `${near.id}:${n}` : "";
+    if (key === this.peekKey) return;
+    this.peekKey = key;
+    this.game.events.emit(HallEvents.PEEK, near ? ({ ...near.project!, people: n } satisfies BoothInfo) : null);
+  }
 
   // inside a booth: everyone in that booth, nobody outside · outside: people in range who aren't in a booth
   private updateHearing() {
