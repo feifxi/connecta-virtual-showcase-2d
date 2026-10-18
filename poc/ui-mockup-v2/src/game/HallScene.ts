@@ -40,6 +40,7 @@ export class HallScene extends Phaser.Scene {
   private fast = false;
   private playerDir: Dir = "down";
   private ring!: Phaser.GameObjects.Graphics;
+  private showRing = false; // demo toggle · the real hall doesn't draw the hearing range
   private nav!: NavGrid;
   private floor!: Phaser.Tilemaps.TilemapLayer;
   private slots: Slot[] = [];
@@ -142,6 +143,7 @@ export class HallScene extends Phaser.Scene {
     const s = this.slots.find((x) => x.project?.no === no);
     if (s) { this.path = this.nav.find(this.player.x, this.player.y - 4, s.rect.centerX, s.rect.bottom - 18) ?? []; this.fast = true; }
   }
+  showRange(on: boolean) { this.showRing = on; }
   setPlayerName(name: string) { this.playerLabel.setText(name); }
 
   // above your head: a reaction pops up and floats away (~2 s) · a nearby chat message stays ~5 s then fades
@@ -249,7 +251,7 @@ export class HallScene extends Phaser.Scene {
       this.current = s;
       this.game.events.emit(HallEvents.ENTER, { ...s.project!, people: this.inSlot(s).length + 1 } satisfies BoothInfo);
     }
-    this.ring.setVisible(!this.current);
+    this.ring.setVisible(this.showRing && !this.current);
     this.updatePeek(carpet);
     this.updateHearing();
   }

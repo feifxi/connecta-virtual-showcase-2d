@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { HallControl } from "@/components/hall-game";
 import { Actor } from "@/components/actor";
+import { DemoControls, DemoGroup, DemoOption } from "@/components/preview-tools";
 import { Icon, Pill, Portrait, Poster, RoleChip, Status } from "@/components/ui";
 import type { BoothInfo, Hearing } from "@/game/HallScene";
 import { AGENDA, CHARACTERS, EVENT, HALL_PEOPLE, HALL_PROJECTS, PROJECTS, RUBRIC, START_ZOOM, type Role } from "@/lib/data";
@@ -41,7 +42,7 @@ export function HallView({ initialRole, initialNet }: { initialRole: Role; initi
   const [step, setStep] = useState(0);
   const [failed, setFailed] = useState(false);
   const [run, setRun] = useState(0);
-  const [netOpen, setNetOpen] = useState(false);
+  const [range, setRange] = useState(false); // demo only: the real hall doesn't draw the hearing circle
   // movement hint: shown once you're in, gone after your first move or 8 s
   const [hint, setHint] = useState(true);
   useEffect(() => {
@@ -111,20 +112,14 @@ export function HallView({ initialRole, initialNet }: { initialRole: Role; initi
       </div>
 
       <div className="hall-top-right">
-        <div className="role-switch" role="group" aria-label="Mockup: preview as role">
-          <span>Preview as</span>
-          {(["Visitor", "Presenter", "Judge", "Admin"] as Role[]).map((r) => <button key={r} type="button" className={role === r ? "active" : ""} aria-pressed={role === r} onClick={() => { setRole(r); if (side === "admin") setSide(null); }}>{r}</button>)}
-        </div>
         {net === "reconnecting" ? <Pill cls="live"><span className="spinner" aria-hidden="true" />Reconnecting</Pill> : net === "audio" ? <Pill cls="live"><Icon name="headphones" className="xs" />No audio</Pill> : <Pill cls="green"><span className="dot" />Connected</Pill>}
       </div>
 
-      <div className="mock-net">
-        {netOpen ? (
-          <div className="role-switch" role="group" aria-label="Mockup: connection">
-            {NETS.map(([n, l]) => <button key={n} type="button" className={net === n ? "active" : ""} aria-pressed={net === n} onClick={() => { restart(n); setNetOpen(false); }}>{l}</button>)}
-          </div>
-        ) : <button type="button" className="mock-net-btn" onClick={() => setNetOpen(true)}>Network: {NETS.find(([n]) => n === net)?.[1]}</button>}
-      </div>
+      <DemoControls>
+        <DemoGroup label="Preview as">{(["Visitor", "Presenter", "Judge", "Admin"] as Role[]).map((r) => <DemoOption key={r} active={role === r} onClick={() => { setRole(r); if (side === "admin") setSide(null); }}>{r}</DemoOption>)}</DemoGroup>
+        <DemoGroup label="Network">{NETS.map(([n, l]) => <DemoOption key={n} active={net === n} onClick={() => restart(n)}>{l}</DemoOption>)}</DemoGroup>
+        <DemoGroup label="Hearing range">{([[false, "Hidden"], [true, "Shown"]] as const).map(([v, l]) => <DemoOption key={l} active={range === v} onClick={() => { setRange(v); control.current?.showRange(v); }}>{l}</DemoOption>)}</DemoGroup>
+      </DemoControls>
 
       <div className="hall-top-center">
         {role === "Judge" && <div className="judge-banner"><Icon name="trophy" /><strong>7 of 12 scored</strong><span>Closes at {EVENT.ends}</span></div>}

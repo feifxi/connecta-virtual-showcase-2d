@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DemoControls, DemoGroup, DemoOption } from "@/components/preview-tools";
 import { AvatarStack, Header, Icon, Pill, Status } from "@/components/ui";
 import { AGENDA, EVENT, PROJECTS, type EventState } from "@/lib/data";
 import { EventCta } from "./event-cta";
@@ -15,12 +16,12 @@ export default async function EventPage({ params, searchParams }: PageProps<"/e/
     <>
       <Header active="Events" />
       <main id="main" className="page container page-content">
-        <div className="state-bar">Mockup · preview phase:{(["published", "live", "exhibition"] as EventState[]).map((p) => <Link key={p} href={`?state=${p}`} className={p === state ? "active" : ""}>{p}</Link>)}</div>
+        <DemoControls><DemoGroup label="Event phase">{(["published", "live", "exhibition"] as EventState[]).map((p) => <DemoOption key={p} href={`?state=${p}`} active={p === state}>{p[0].toUpperCase() + p.slice(1)}</DemoOption>)}</DemoGroup></DemoControls>
         <div className="breadcrumb"><Link href="/explore">Events</Link><Icon name="chevron" /><span>{EVENT.name}</span></div>
         <section className="event-hero">
           <div className="event-hero-copy">
             <div className="flex">
-              {state === "live" ? <Status text="Live now" count={`${EVENT.inHall} in hall`} /> : state === "published" ? <Pill cls="blue">Opens {EVENT.dateShort} · 10:00</Pill> : <Pill cls="green">Exhibition · open until 15 Nov</Pill>}
+              {state === "live" ? <Status text="Live now" /> : state === "published" ? <Pill cls="blue">Opens {EVENT.dateShort} · 10:00</Pill> : <Pill cls="green">Exhibition · open until 15 Nov</Pill>}
               <Pill cls="lav">🔒 {EVENT.access}</Pill>
             </div>
             <h1>Senior Design<br />Showcase 2026</h1>
@@ -44,8 +45,8 @@ export default async function EventPage({ params, searchParams }: PageProps<"/e/
           </div>
         )}
 
-        <div className="section-heading"><div><h2>Projects</h2><p>{state === "live" ? "Booths show ● Live when a presenter is inside, plus how many people are there." : "Browse before you go in."}</p></div><span className="small-text muted">{PROJECTS.length} featured projects</span></div>
-        <ProjectGrid slug={slug} live={state === "live"} />
+        <div className="section-heading"><div><h2>Projects</h2><p>Browse before you go in.</p></div><span className="small-text muted">{PROJECTS.length} featured projects</span></div>
+        <ProjectGrid slug={slug} />
 
         <section className="agenda">
           <div><h2>Agenda</h2><p>Booths are open all day. Walk in whenever you like.</p></div>

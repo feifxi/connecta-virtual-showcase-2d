@@ -24,6 +24,16 @@
 
 **ขนาดงานเป้าหมาย**: 150 คนพร้อมกันต่อ 1 ฮอลล์ (ประมาณจาก D-Day 600+ คนทั้งวัน · 39 ผลงาน) · เพดาน 300 คน/ฮอลล์ · capacity และสเปก VM อยู่ใน `poc/README.md`
 
+**Frontend ใน `apps/web`** (mockup ใน `poc/` ไม่ได้ใช้ชุดนี้ · ย้ายมาเป็นแอปจริงต้องเขียนใหม่ตามนี้ ไม่ copy ตรงๆ)
+- Styling: **Tailwind v4** · token สี/ฟอนต์/ขนาดตัวอักษรจาก theme `ui-mockup-v2` อยู่ใน `@theme` · ไม่ใช้ inline style และ CSS ไฟล์ใหญ่ไฟล์เดียว
+- UI พื้นฐาน: **shadcn/ui** แต่งเป็นหน้าตา v2 (Dialog · DropdownMenu · Popover · Tabs · Tooltip) + **sonner** (toast) · ได้ focus trap · Esc · คีย์บอร์ดครบ · icon ใช้ **lucide-react**
+- State: **Zustand** (`hallStore` สถานะในฮอลล์ · Phaser ส่ง event เข้า store) + **TanStack Query** (ข้อมูลจาก REST · cache · loading/error)
+- Type ของ API: NestJS สร้าง OpenAPI → **openapi-typescript + openapi-fetch** · type ที่ใช้ร่วมอื่นๆ อยู่ใน `packages/`
+- Form: **React Hook Form + Zod** (สร้างงาน · แก้บูธ · rubric)
+- โครง code: แยกตาม feature เช่น `features/hall/` → `HallToolbar` · `BoothPanel` · `ChatPanel` · `PeoplePanel` · ไม่รวมไว้ในไฟล์เดียว
+- Test: **Vitest + Testing Library** (unit) · **Playwright** (E2E) · Prettier + ESLint (ต้องผ่าน `react-hooks`)
+- ไม่ใช้: MUI / Chakra (หน้าตาสำเร็จรูปดึงออกจาก theme) · Redux (หนักเกินขนาดโปรเจค) · styled-components (ซ้อนกับ Tailwind · ไม่เข้ากับ Server Components) · axios (openapi-fetch ใช้ `fetch` อยู่แล้ว · `fetch` ใน Server Components ใช้ cache ของ Next.js ได้)
+
 **Phaser 4**
 - ⚠️ AI มักเขียน API ของ v3 (`setTintFill()` · `Geom.Point` · custom pipeline · Mesh) → ตรวจกับ docs v4 / migration guide ก่อน
 - ตัวอย่างโค้ด v3 (เช่น SkyOffice) ใช้เป็นแนวทางได้แต่ต้องแปลง

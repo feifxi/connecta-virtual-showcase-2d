@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Btn, Icon, Initials, Kpis, LiveBadge, Pill, RoleChip, Status, Workspace } from "@/components/ui";
+import { Btn, Icon, Initials, Kpis, Pill, RoleChip, Status, Workspace } from "@/components/ui";
 import { EVENT, PROJECTS, RUBRIC, type Role } from "@/lib/data";
 
 const card = "surface panel-card";
@@ -7,12 +7,12 @@ const card = "surface panel-card";
 function Overview() {
   return (
     <>
-      <Kpis items={[["Interested", String(EVENT.interested), "before the event", "bell"], ["Joined", "438", "371 tapped Interested first", "users"], ["In the hall now", String(EVENT.inHall), `${EVENT.reserved} seats reserved · ${EVENT.capacity} max`, "globe"], ["Scores submitted", "201 / 336", "close when the event ends", "trophy"]]} />
+      <Kpis items={[["Interested", String(EVENT.interested), "before the event", "bell"], ["Joined", "438", "371 tapped Interested first", "users"], ["Booths ready", "21 / 24", "3 still missing a poster", "grid"], ["Scores submitted", "201 / 336", "close when the event ends", "trophy"]]} />
       <div className="workspace-grid">
         <section className="surface">
-          <div className="panel-card" style={{ paddingBottom: 12 }}><div className="flex between"><h2 style={{ fontSize: "1.1rem" }}>Booths right now</h2><Link className="text-link" href={`/manage/${EVENT.slug}/projects`}>All {EVENT.booths} projects <Icon name="arrow" /></Link></div></div>
-          <div className="table-wrap"><table><thead><tr><th>Booth</th><th>Project</th><th>Zone</th><th>Now</th></tr></thead><tbody>
-            {PROJECTS.map((p) => <tr key={p.code}><td><span className="booth-code">{p.code}</span></td><td>{p.short}</td><td>{p.category}</td><td><LiveBadge live={p.live} people={p.people} /></td></tr>)}
+          <div className="panel-card" style={{ paddingBottom: 12 }}><div className="flex between"><h2 style={{ fontSize: "1.1rem" }}>Booths</h2><Link className="text-link" href={`/manage/${EVENT.slug}/projects`}>All {EVENT.booths} projects <Icon name="arrow" /></Link></div></div>
+          <div className="table-wrap"><table><thead><tr><th>Booth</th><th>Project</th><th>Zone</th></tr></thead><tbody>
+            {PROJECTS.map((p) => <tr key={p.code}><td><span className="booth-code">{p.code}</span></td><td>{p.short}</td><td>{p.category}</td></tr>)}
           </tbody></table></div>
         </section>
         <section className={card}>

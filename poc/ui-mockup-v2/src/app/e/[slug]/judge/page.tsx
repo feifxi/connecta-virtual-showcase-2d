@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Btn, Icon, LiveBadge, Pill, Workspace } from "@/components/ui";
+import { Btn, Icon, Pill, Workspace } from "@/components/ui";
 import { EVENT, PROJECTS, RUBRIC } from "@/lib/data";
 
 type Sheet = "Submitted" | "Draft" | "Not started";
@@ -25,13 +25,12 @@ export default function JudgeList() {
         <section className="surface">
           <div className="table-wrap">
             <table>
-              <thead><tr><th>Booth</th><th>Project</th><th>Now</th><th>Your score</th></tr></thead>
+              <thead><tr><th>Booth</th><th>Project</th><th>Your score</th></tr></thead>
               <tbody>
                 {PROJECTS.map((x, i) => (
                   <tr key={x.code} onClick={() => setOpen(i)} style={{ cursor: "pointer", background: open === i ? "var(--blue-tint)" : undefined }}>
                     <td><span className="booth-code">{x.code}</span></td>
                     <td><strong style={{ fontWeight: 600 }}>{x.short}</strong><div className="small-text muted">{x.category}</div></td>
-                    <td><LiveBadge live={x.live} people={x.people} /></td>
                     <td><Pill cls={SHEET_CLS[SHEETS[i]]}>{SHEETS[i]}</Pill></td>
                   </tr>
                 ))}

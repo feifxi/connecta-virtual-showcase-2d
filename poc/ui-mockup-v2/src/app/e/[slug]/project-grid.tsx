@@ -2,17 +2,17 @@
 
 import Link from "next/link";
 import { useRef, useState } from "react";
-import { AvatarStack, Empty, Icon, LiveBadge, Pill, Poster } from "@/components/ui";
+import { AvatarStack, Empty, Icon, Pill, Poster } from "@/components/ui";
 import { CATEGORIES, PROJECTS, type Project } from "@/lib/data";
 
-const FILTERS = ["All projects", "Live now", ...CATEGORIES] as const;
+const FILTERS = ["All projects", ...CATEGORIES] as const;
 
-export function ProjectGrid({ slug, live }: { slug: string; live: boolean }) {
+export function ProjectGrid({ slug }: { slug: string }) {
   const [filter, setFilter] = useState<string>("All projects");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<Project | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
-  const shown = PROJECTS.filter((p) => (filter === "All projects" || (filter === "Live now" ? p.live : p.category === filter)) && `${p.title} ${p.code} ${p.tag}`.toLowerCase().includes(q.toLowerCase()));
+  const shown = PROJECTS.filter((p) => (filter === "All projects" || p.category === filter) && `${p.title} ${p.code} ${p.tag}`.toLowerCase().includes(q.toLowerCase()));
   const show = (p: Project) => { setOpen(p); dialog.current?.showModal(); };
   return (
     <>
@@ -23,7 +23,7 @@ export function ProjectGrid({ slug, live }: { slug: string; live: boolean }) {
       <div className="project-grid">
         {shown.length ? shown.map((p) => (
           <button key={p.code} type="button" className="project-card" onClick={() => show(p)}>
-            <div className="card-top"><span className="booth-code">Booth {p.code}</span>{live ? <LiveBadge live={p.live} people={p.people} /> : <Pill>{p.category}</Pill>}</div>
+            <div className="card-top"><span className="booth-code">Booth {p.code}</span><Pill>{p.category}</Pill></div>
             <h3>{p.title}</h3>
             <p className="project-abstract">{p.abstract}</p>
             <div className="project-foot"><AvatarStack ids={p.team} /><span>Team {p.short}</span><span className="project-tag">{p.tag}</span></div>
@@ -34,7 +34,7 @@ export function ProjectGrid({ slug, live }: { slug: string; live: boolean }) {
         <button type="button" className="icon-btn modal-close" aria-label="Close dialog" onClick={() => dialog.current?.close()}><Icon name="close" /></button>
         {open && (
           <>
-            <div className="flex between"><span className="booth-code">Booth {open.code}</span>{live && <LiveBadge live={open.live} people={open.people} />}</div>
+            <div className="flex between"><span className="booth-code">Booth {open.code}</span><Pill>{open.category}</Pill></div>
             <h2 id="project-title" style={{ margin: "18px 0 8px" }}>{open.title}</h2>
             <p>{open.abstract}</p>
             <div className="project-poster"><Poster p={open} /></div>

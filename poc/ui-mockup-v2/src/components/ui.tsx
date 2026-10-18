@@ -34,15 +34,6 @@ export function Status({ text = "Live now", count }: { text?: string; count?: st
   return <Pill cls="live"><span className="dot" />{text}{count !== undefined ? ` · ${count}` : ""}</Pill>;
 }
 
-export function LiveBadge({ live, people }: { live: boolean; people?: number }) {
-  return (
-    <span className="flex" style={{ gap: 6 }}>
-      {live && <Status text="Live" />}
-      {people !== undefined && <Pill><Icon name="users" className="xs" />{people}</Pill>}
-    </span>
-  );
-}
-
 const ROLE_CLS: Record<Role, string> = { Admin: "lav", Presenter: "green", Judge: "blue", Visitor: "" };
 export function RoleChip({ role }: { role: Role }) {
   return <Pill cls={ROLE_CLS[role]}>{role}</Pill>;

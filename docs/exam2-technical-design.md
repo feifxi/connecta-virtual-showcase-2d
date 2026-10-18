@@ -278,7 +278,6 @@ Authorization: Bearer eyJ…
 | เรื่อง | เลือกไว้ | ข้อควรรู้ |
 |---|---|---|
 | mute / kick / ban | R2 | `features.md` นับเป็น core ข้อ 1 ที่ "ห้ามตัด" · ย้ายมา R1 ได้แต่งานเยอะขึ้น |
-| State management | Zustand + TanStack Query | ยังไม่อยู่ใน `technical.md` · ทีมโอเคแล้วค่อยเพิ่ม |
 | Port ของ web | 3001 | api ใช้ 3000 อยู่แล้ว · ยังไม่ได้กำหนดใน `technical.md` |
 | เสียงบน production | LiveKit บน VM ถ้าได้ public IP · ไม่งั้น LiveKit Cloud | ต้องถาม IT เรื่อง public IP และพอร์ต UDP ให้เร็วที่สุด |
 

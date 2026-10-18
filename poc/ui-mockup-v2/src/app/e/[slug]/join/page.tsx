@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DemoControls, DemoGroup, DemoOption } from "@/components/preview-tools";
 import { Actor } from "@/components/actor";
 import { Header, Icon, Pill } from "@/components/ui";
 import { EVENT, VISITOR_TYPES } from "@/lib/data";
@@ -11,7 +12,7 @@ export default async function Join({ params, searchParams }: PageProps<"/e/[slug
     <>
       <Header active="Events" />
       <main id="main" className="page container narrow page-content">
-        <div className="state-bar">Mockup:<Link href="?" className={!q.full ? "active" : ""}>form</Link><Link href="?full=1" className={q.full ? "active" : ""}>hall is full</Link></div>
+        <DemoControls><DemoGroup label="Join"><DemoOption href="?" active={!q.full}>Form</DemoOption><DemoOption href="?full=1" active={!!q.full}>Hall is full</DemoOption></DemoGroup></DemoControls>
         <div className="breadcrumb"><Link href={`/e/${slug}`}>{EVENT.name}</Link><Icon name="chevron" /><span>Before you go in</span></div>
         {q.full ? (
           <section className="surface panel-card" style={{ textAlign: "center", maxWidth: 520, margin: "0 auto" }}>
