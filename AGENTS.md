@@ -1,97 +1,95 @@
 # Connecta — Capstone CP26SSI3
 
-> คำสั่งสำหรับ AI agent ทุกตัวในทีม (Claude Code อ่านผ่าน `CLAUDE.md` · Codex อ่าน `AGENTS.md` โดยตรง) · **แก้ที่ไฟล์นี้ที่เดียว**
+> Instructions for every AI agent on the team (Claude Code reads this via `CLAUDE.md` · Codex reads `AGENTS.md` directly) · **edit this file only**
 
-Repo หลักของโปรเจคจบ · Connecta — แพลตฟอร์มงานนำเสนอผลงานออนไลน์ ผู้ชมเดินไปตามบูธในโลก 2D แล้วคุยสดกับผู้นำเสนอ
+Main repo of the capstone project · Connecta — an online platform for presenting student work: visitors walk between booths in a 2D world and talk live with presenters.
 
-## เอกสาร
+## Docs
 
-| ไฟล์ | ใช้ทำอะไร |
+| File | Purpose |
 |---|---|
-| `docs/connecta.md` | ⭐ Product & Business: direction · pain · solution · target · value & competition · business model · SDG · ความเสี่ยง |
-| `docs/features.md` | ⭐ spec ฟีเจอร์: กฎร่วม · ลำดับ core/cut · role · spec รายฟีเจอร์ตามแม่แบบ (ทำไม · ใครทำอะไร · เปิด/ปิด · ใครเห็น · Plan · กติกา · ไม่ทำ · ข้อมูล · Test) |
-| `docs/data-model.md` | ⭐ database design: ER diagram · ตาราง · constraint · index · enum · สถานะงาน · ข้อมูลที่ไม่เก็บ · state ใน memory · ไฟล์ · lifecycle/PDPA |
-| `docs/api.md` | ⭐ REST API ทั้งหมด · error · status code · message ของ Colyseus · สิทธิ์ใน LiveKit |
-| `docs/technical.md` | ⭐ stack · architecture · deployment · reference ด้านเทคนิค |
-| `poc/README.md` | ⭐ POC ทั้งหมด: แผน spike · สถานะ · วิธีทดสอบ · ผล · capacity · สเปก VM · สิ่งที่ต้องขอจาก IT · fallback |
-| `docs/consult_connecta.md` | ผลสอบกรรมการภายนอก (26 ก.ย. 2569) ของทีมเรา · ที่พลาด · สิ่งที่ควรทำต่อ |
-| `docs/archive/` | ไม่ต้องอ่านเว้นแต่ถูกขอ · `connecta.md` เวอร์ชันเก่า · ผล consult ของทีมอื่น · template proposal |
+| `docs/connecta.md` | ⭐ Product & Business: direction · pain · solution · target · value & competition · business model · SDG · risks |
+| `docs/features.md` | ⭐ Feature spec: shared rules · core/cut order · Release plan · roles · per-feature spec (why · who does what · on/off · who sees · plan · rules · won't do · data · tests) |
+| `docs/data-model.md` | ⭐ Database design: tables · constraints · indexes · enums · event status · data not stored · in-memory state · files · lifecycle/PDPA |
+| `docs/api.md` | ⭐ All REST endpoints · errors · status codes · Colyseus messages · LiveKit permissions |
+| `docs/technical.md` | ⭐ Stack · versions · architecture · ports · deployment · technical references |
+| `poc/README.md` | ⭐ Everything POC: spike plan · status · how to test · results · capacity · VM spec · requests to IT · fallbacks |
+| `docs/archive/` | Don't read unless asked · old versions of `connecta.md` · external committee consult notes (ours + other teams) · proposal template |
 
 ## Direction
 
-- **โฟกัสงานนำเสนอผลงานของนักศึกษา** (งานโปรเจคจบ · โปสเตอร์ในรายวิชา) — ใกล้ตัว ทดสอบได้จริง และเป็นส่วนที่ Zoom/Teams ทำได้ไม่ดี
-- core โลก 2D ใช้ได้ทุก domain → ถ้าพบ insight ที่ดีกว่า (เช่น poster session งานประชุมวิชาการ) ปรับ use case ได้โดยไม่ต้องรื้อ
-- รายละเอียดอยู่ใน `docs/connecta.md` · **ก่อนเขียนโค้ดให้อ่าน `docs/features.md` · `docs/data-model.md` · `docs/technical.md`**
+- **Focus on student work presentations** (capstone showcases · in-course poster sessions) — close to us, testable for real, and something Zoom/Teams do poorly
+- The 2D-world core works for any domain → if a better insight appears (e.g. academic conference poster sessions), the use case can shift without a rewrite
+- Details in `docs/connecta.md` · **before writing code, read `docs/features.md` · `docs/data-model.md` · `docs/technical.md`**
 
-## กติกาเอกสาร context หลัก
+## Doc rules
 
-- กติกาเลขเวอร์ชันใช้กับ `connecta.md` (Product & Business) เท่านั้น · `features.md` · `data-model.md` · `technical.md` แก้ในไฟล์เดิมได้เลย · เพิ่มหรือแก้ฟีเจอร์ต้องตอบ checklist บนหัว `features.md` และแก้ตารางใน `data-model.md` ให้ตรงกัน
-- เปลี่ยน direction ใหญ่ → ย้ายไฟล์ปัจจุบันไป `docs/archive/deprecated-connecta-vN.md` (N = เลขถัดจากไฟล์ล่าสุดใน archive) แล้วเขียน `docs/connecta.md` ใหม่
-- ไฟล์ใหม่ต้อง**แทนที่ไฟล์เก่า 100%** — ข้อมูลที่ยังใช้ต้องยกมาครบ **ห้ามอ้างถึงไฟล์เก่า**
-- ชื่อไฟล์ใน `archive/` ใช้รูปแบบ `deprecated-<ชื่อ>-vN.md`
+- Versioning applies only to `connecta.md` (Product & Business) · edit `features.md` · `data-model.md` · `api.md` · `technical.md` in place · adding or changing a feature must answer the checklist at the top of `features.md` and keep `data-model.md` and `api.md` in sync
+- Major direction change → move the current file to `docs/archive/deprecated-connecta-vN.md` (N = next number after the latest in archive), then write a new `docs/connecta.md`
+- A new file must **replace the old one 100%** — carry over everything still valid · **never reference the old file**
+- Archive file names: `deprecated-<name>-vN.md`
+- Docs no longer needed may be deleted (history is in git) · except `connecta.md`, which goes to `archive/` per the versioning rule
 
-## วิธีทำงาน
+## Working style
 
-- ตอบและเขียนเอกสารเป็น**ภาษาไทย** · ใช้คำทับศัพท์อังกฤษ (Presenter, Booth, Judge) แทนคำแปล
-- **อย่าเดา ให้ research** และบอกแหล่งที่มา · ตอบตรงๆ ไม่อวย
-- เอกสาร**กระชับ** อ่านได้ทั้งคนและ agent · ไม่อธิบายเกินจำเป็น · ไม่เว้นบรรทัดเกิน
-- **เขียนแค่สถานะปัจจุบัน** — ไม่บอกว่าก่อนหน้านี้เป็นอะไร เปลี่ยนจากอะไร หรืออะไรใหม่ (ไม่มี "เดิม" · "🆕" · "เปลี่ยนจาก" · วันที่ที่แก้) · ประวัติอยู่ใน git และ `archive/`
-- **ตัดสินใจแล้วเขียนแค่สิ่งที่เลือก** + เหตุผลสั้นๆ · ไม่เก็บการเปรียบเทียบตัวเลือก
-- **Pain → Solution ก่อน แล้วค่อยชูจุดแข็ง** · ห้ามเอาจุดแข็งไปเปลี่ยนตัวตนของ product
-- **ไม่เขียนออกตัว/ลดค่าตัวเอง** (เช่น "ไม่ได้แข่งเรื่อง X เพราะเจ้าใหญ่ทำแล้ว") · ชูข้อดี แต่ไม่เคลมเกินจริง
-- **ห้ามแก้นิยามหลักที่ผู้ใช้/ทีมเขียนเอง** (แนวคิด · pain point · problem statement) · แก้ใหญ่ต้องให้ดูก่อน · ย่อเอกสารห้ามตัดของผู้ใช้ทิ้งเงียบๆ ต้องบอกว่าตัดอะไร
-- เนื้อหา proposal **ส่งในแชท** ไม่แก้ไฟล์ เว้นแต่สั่ง · ถ้าจะแปะลง Word: ห้าม code block · ห้าม `<br>` · ตารางไม่เกิน 4 คอลัมน์
-- โปรเจคนักศึกษา **ไม่ต้องชนะคู่แข่ง** แต่ต้องบอกได้ว่าต่างยังไง · เรียนรู้ pattern จากเจ้าใหญ่ได้
-- เอกสารที่ไม่ใช้แล้วลบได้ (ประวัติอยู่ใน git) · ยกเว้น `connecta.md` ที่ต้องย้ายไป `archive/` ตามกติกาเลขเวอร์ชัน
-- ห้าม commit `.env`/key (ใช้ `.env.example`) · ไฟล์ใหญ่ (วิดีโอ สไลด์หนัก) เก็บ Drive แล้ววางลิงก์ หรือใช้ Git LFS · repo เป็น private
+- **Reply to the user and write docs in Thai** · keep English loanwords (Presenter, Booth, Judge) instead of translating · agent-only files (`AGENTS.md`, `CLAUDE.md`, agent memory) are in English
+- **Don't guess — research** and cite sources · answer directly, no flattery
+- Docs are **concise**, readable by humans and agents · no over-explaining · no extra blank lines
+- **Write only the current state** — never say what it was before, what changed, or what's new (no "เดิม" · "🆕" · "เปลี่ยนจาก" · edit dates) · history lives in git and `archive/`
+- **Once decided, write only the choice** + a short reason · don't keep option comparisons
+- **Pain → Solution first, then strengths** · never let a strength change the product's identity
+- **No self-deprecating or defensive writing** (e.g. "we don't compete on X because big players already do") · highlight strengths without overclaiming
+- **Never alter core definitions the user/team wrote** (concept · pain points · problem statement) · show big edits first · when condensing, never silently drop the user's content — say what was cut
+- Proposal content is **sent in chat**, not written to files, unless asked · if it will be pasted into Word: no code blocks · no `<br>` · tables ≤ 4 columns
+- Student project: **no need to beat competitors**, but must explain how we differ · learning patterns from big players is fine
+- Never commit `.env`/keys (use `.env.example`) · large files (video, heavy slides) go to Drive with a link, or Git LFS · repo is private
 
-## เกณฑ์ของวิชา (INT365/371)
+## Course criteria (INT365/371)
 
-| Exam | กำหนด | สิ่งที่ประเมิน |
+| Exam | When | Assessed |
 |---|---|---|
-| Exam 2 Pre-Game (30) | ✅ สอบแล้ว 19–20 ต.ค. 2569 | POC · ออกแบบทางเทคนิค R1 · Revised IT Solution · Roadmap |
-| Exam 3 Release 1 (35) | 30 พ.ย. 13:30–18:00 / 1 ธ.ค. 09:00–18:00 (tentative) | ความก้าวหน้า/ความยาก/ปริมาณงาน 13 · Potentially Shippable Increment 7 (test case ปกติ + exception · exception handling · ไม่มี error · **deploy บน server ไม่ใช่ localhost**) · หลักฐาน AI-assisted development 5 · ความเข้าใจระบบ 10 · ส่ง Retrospective Report รายคน |
+| Exam 2 Pre-Game (30) | ✅ done 19–20 Oct 2026 | POC · R1 technical design · Revised IT Solution · Roadmap |
+| Exam 3 Release 1 (35) | 30 Nov 13:30–18:00 / 1 Dec 09:00–18:00 (tentative) | Progress/difficulty/workload 13 · Potentially Shippable Increment 7 (normal + exception test cases · exception handling · no errors · **deployed on a server, not localhost**) · AI-assisted development evidence 5 · system understanding 10 · individual Retrospective Report |
 
-- **Release 1 = core feature อย่างน้อย 1 ตัว ครบ Frontend → Backend → DB** · login ไม่นับเป็น core feature
-- ข้อมูลความต้องการต้องมาจากผู้ใช้เป้าหมาย **ที่ไม่ใช่ทีมพัฒนา** · คาดหวังระบบใหญ่ขึ้น (ผู้ใช้จำนวนมาก · platform · ข้อมูลส่วนบุคคล) · AI feature แบ่งระดับ Low / Intermediate / Advance
-- คะแนนนำเสนอ + ถาม-ตอบรวม 3 รอบ · แต่งกายผิดระเบียบหักคะแนนทีม 2 · พบอาจารย์ที่ปรึกษา ≥ 7 ครั้ง (คะแนน Project Management)
-- งบวิชา ≤ 3,000 บาท/ทีม **เบิกค่าโครงสร้างพื้นฐาน (server/cloud) ไม่ได้** · ผลงานเป็นลิขสิทธิ์ของมหาวิทยาลัย · D-Day ปลาย เม.ย.
+- **Release 1 = at least 1 core feature end-to-end Frontend → Backend → DB** · login does not count as a core feature
+- Requirements data must come from target users **who are not the dev team** · larger systems expected (many users · platform · personal data) · AI features graded Low / Intermediate / Advance
+- Presentation + Q&A scored over 3 rounds · dress-code violation −2 team points · meet the advisor ≥ 7 times (Project Management score)
+- Course budget ≤ 3,000 THB/team · **infrastructure (server/cloud) is not reimbursable** · work is university copyright · D-Day late April
 
-**แนวที่อาจารย์เน้น**: Pain → Challenge → Solution → Outcome · วัดผลที่ **Outcome** (ผู้ใช้ได้ผลจริง) ไม่ใช่ Output (มีระบบ) · Challenge ต้องเป็นพฤติกรรม/ข้อจำกัดของผู้ใช้ ไม่ใช่ "ยังไม่มีระบบ" (ตัวอย่างอาจารย์: ทำระบบรีวิวไม่ยาก แต่ทำให้คนเขียนรีวิวยาก)
+**What instructors emphasize**: Pain → Challenge → Solution → Outcome · measure **Outcome** (users actually benefit), not Output (a system exists) · Challenge must be a user behavior/constraint, not "no system exists yet" (instructor's example: building a review system is easy, getting people to write reviews is hard)
 
-**กรรมการภายนอกไม่ถามเทคนิค** ถามแต่ value · ใครใช้/ใครจ่าย · ทำไมไม่ใช้ Zoom / MS365 / Google Workspace / Gather → รายละเอียดใน `docs/consult_connecta.md`
+**External committee doesn't ask technical questions** — only value · who uses / who pays · why not Zoom / MS365 / Google Workspace / Gather → details in `docs/archive/consult_connecta.md`
 
-## ทีม
+## Team
 
-- CP26SSI3 · อาจารย์ที่ปรึกษา: อ.สนิท ศิริสวัสดิ์วัฒนา
-- สมาชิก: กิตติกัญ วิวเมฆ · ณัฐชนน เจริญเสริมสิริ · สุชัย ชลชัยไพศาล · ตอนสอบแบ่งบทบาท UX/UI · front end · back end
-- **หัวข้อในรุ่นที่ทับกับเรา**: KMUTT Event Discovery and Management System · ระบบจัดการเข้าชมและประเมินโครงงานปี 4 · แพลตฟอร์มนำเสนอแบบมีปฏิสัมพันธ์สำหรับห้องเรียน มจธ. → จุดต่างของเราคือ งานออนไลน์ที่เดินชมและคุยสดได้
+- CP26SSI3 · advisor: อ.สนิท ศิริสวัสดิ์วัฒนา
+- Members: กิตติกัญ วิวเมฆ · ณัฐชนน เจริญเสริมสิริ · สุชัย ชลชัยไพศาล · exam roles: UX/UI · front end · back end
+- **Overlapping topics in our cohort**: KMUTT Event Discovery and Management System · ระบบจัดการเข้าชมและประเมินโครงงานปี 4 (year-4 project visit & evaluation system) · แพลตฟอร์มนำเสนอแบบมีปฏิสัมพันธ์สำหรับห้องเรียน มจธ. (interactive classroom presentation platform) → our difference: an online event you can walk through and talk live in
 
-## เทคนิค
+## Technical
 
-- stack · architecture อยู่ใน `docs/technical.md` · spike และผลทดสอบอยู่ใน `poc/README.md`
-- ใช้ **nginx** (ทีมมีประสบการณ์) · ต้องตั้งเอง: certbot · header WebSocket (`Upgrade`/`Connection`) · TURN over TLS บน 443 ด้วย `stream` + `ssl_preread`
-- spike **S1–S7** (S1 Phaser 4+Tiled · S2 LiveKit hello · S3 Movement sync · S4 Proximity media · S5 เสียงโซนบูธ · S6 Poster/3D viewer sync · S7 NAT+TURN) · S1–S6 = POC app เดียว · S7 ทดสอบบน VM แยก · S1–S4 เสร็จแล้ว · เหลือ S5–S7 · สถานะอยู่ใน `poc/README.md`
-- ไม่ต้องเข้าไปดู repo `poc-connecta`
+- Stack · architecture in `docs/technical.md` · spikes and test results in `poc/README.md`
+- **nginx** (team has experience) · must configure: certbot · WebSocket headers (`Upgrade`/`Connection`) · TURN over TLS on 443 via `stream` + `ssl_preread`
+- Spikes **S1–S7** (S1 Phaser 4+Tiled · S2 LiveKit hello · S3 Movement sync · S4 Proximity media · S5 booth-zone audio · S6 Poster/3D viewer sync · S7 NAT+TURN) · S1–S6 = one POC app · S7 tested on a separate VM · S1–S4 done · S5–S7 remaining (S7 before Exam 3) · status in `poc/README.md`
+- Don't open the `poc-connecta` repo
 
-## กติกาเขียนโค้ด
+## Coding rules
 
-- **POC: ทำทีละ spike · จบ spike ต้องหยุด รายงานผล และรอเจ้าของ POC อนุมัติก่อนเริ่ม spike ถัดไป** · ห้ามทำข้าม spike · อนุมัติแล้วค่อย tag `s<N>-done` (กติกาเต็มใน `poc/README.md`)
+- **POC: one spike at a time · when a spike ends, stop, report results, and wait for the POC owner's approval before the next** · never skip ahead · tag `s<N>-done` after approval (full rules in `poc/README.md`)
+- **Phaser 4, not Phaser 3** — AI tends to mix in v3 APIs (e.g. `setTintFill()`, `Geom.Point`, custom pipelines, Mesh) · check unfamiliar APIs against v4 docs and the [migration guide](https://phaser.io/news/2026/04/migrating-from-phaser-3-to-phaser-4-what-you-need-to-know) · v3 examples (e.g. SkyOffice) are guidance only and must be converted
+- **Never leave servers/processes running** — stop every process you started after testing, then give the user the commands to run it themselves
+- Fast-changing libraries (Colyseus · LiveKit · Next.js · Better Auth): check the version in `package.json` and read that version's docs, don't rely on memory · Next.js docs for the installed version are in `node_modules/next/dist/docs/` · Phaser's in `node_modules/phaser/skills/`
+- **Never trust the client** — role checks on all 3 paths: REST · WebSocket messages · LiveKit token issue / permission change (all shared rules in `docs/features.md`)
 
-- **Phaser 4 ไม่ใช่ Phaser 3** — AI มักเขียน API ของ v3 ปนมา (เช่น `setTintFill()`, `Geom.Point`, custom pipeline, Mesh) · ก่อนใช้ API ที่ไม่แน่ใจ ตรวจกับ docs ของ v4 และ [migration guide](https://phaser.io/news/2026/04/migrating-from-phaser-3-to-phaser-4-what-you-need-to-know) · ตัวอย่างโค้ด v3 (เช่น SkyOffice) ใช้เป็นแนวทางได้แต่ต้องแปลง
-- **ห้ามปล่อย server/process รันค้าง** — ทดสอบเสร็จต้องหยุดทุก process ที่เปิดเอง แล้วบอกคำสั่งให้ผู้ใช้รันทดสอบเอง
-- library ที่ API เปลี่ยนบ่อย (Colyseus · LiveKit · Next.js) ให้เช็คเวอร์ชันใน `package.json` แล้วอ่าน docs ของเวอร์ชันนั้น ไม่เดาจากความจำ · Next.js มี docs ตรงเวอร์ชันใน `node_modules/next/dist/docs/` · Phaser มีใน `node_modules/phaser/skills/`
-- **ห้ามเชื่อ client** — role check ครบ 3 ทาง: REST · WebSocket message · ตอนออก token / เปลี่ยนสิทธิ์ใน LiveKit (กฎร่วมทั้งหมดอยู่ใน `docs/features.md`)
+## Repo layout
 
-## โครง repo
+- `apps/web` (Next.js + Phaser 4) · `apps/server` (game server + API) · `packages/` (shared types when needed) · `infra/` (docker-compose, nginx, TURN, LiveKit, deploy)
+- `poc/` experiments before implementation · `poc/demo-app/` the single POC app (`web/` + `realtime/`) grown spike by spike S1–S6 · other `poc/` folders: UI mockups · 2D maps · everything POC is documented in `poc/README.md`
 
-- `apps/web` (Next.js + Phaser 4) · `apps/server` (game server + API) · `packages/` (type ที่ใช้ร่วม เมื่อจำเป็น) · `infra/` (docker-compose, nginx, TURN, LiveKit, deploy)
-- `poc/` ของทดลองก่อน implement · `poc/demo-app/` POC app เดียว (`web/` + `realtime/`) ต่อยอดทีละ spike S1–S6 · โฟลเดอร์อื่นใน `poc/` เช่น UI mockup · แมป 2D · ทุกอย่างของ POC อยู่ใน `poc/README.md` ไฟล์เดียว
+## Next up
 
-## งานถัดไป
-
-1. Exam 3 Release 1 (30 พ.ย.): implement ใน `apps/` + deploy บน server · ขอบเขตอยู่ใน `docs/features.md` → Release plan · UI ใช้ `poc/ui-mockup-v2/` เป็น theme หลัก
-2. ทีมเขียน one-liner · pain · problem statement เอง แทนร่างใน `docs/connecta.md`
-3. ทำ survey + นัดคุยผู้จัด D-Day / อาจารย์ · ความเป็นไปได้ทางธุรกิจต้องใช้ข้อมูลจากผู้ใช้เป้าหมายจริง (ไม่ใช่ทีม)
-4. UI mockup v1 + v2 ตรงกับ `docs/features.md` แล้ว (รายการหน้าอยู่ใน `poc/README.md`) · หน้าที่ยังไม่ทำ: Profile · Billing · Platform Console · สรุปของผู้นำเสนอ · ฟอร์มส่งผลงาน
-5. เช็ค SpatialChat ว่ามี judging หรือไม่
+1. Exam 3 Release 1 (30 Nov): implement in `apps/` + deploy on a server · scope in `docs/features.md` → Release plan · UI uses `poc/ui-mockup-v2/` as the main theme
+2. Team writes the one-liner · pain · problem statement themselves, replacing the draft in `docs/connecta.md`
+3. Survey done (users confirm time/travel is the main pain) · still to do: interview D-Day organizers / course instructors · business feasibility needs data from real target users (not the team)
+4. UI mockups v1 + v2 match `docs/features.md` (page list in `poc/README.md`) · pages not built yet: Profile · Billing · Platform Console · Presenter summary · project submission form
+5. Check whether SpatialChat has judging

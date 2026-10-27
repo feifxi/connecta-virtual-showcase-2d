@@ -1,3 +1,3 @@
 @AGENTS.md
 
-<!-- คำสั่งทั้งหมดอยู่ใน AGENTS.md (ใช้ร่วมกับ Codex) · ใส่ที่นี่เฉพาะสิ่งที่ใช้กับ Claude Code เท่านั้น -->
+<!-- All instructions live in AGENTS.md (shared with Codex) · put only Claude Code–specific items here -->
