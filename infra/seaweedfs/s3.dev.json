@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "connecta",
+      "credentials": [{ "accessKey": "connecta", "secretKey": "connecta-secret" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

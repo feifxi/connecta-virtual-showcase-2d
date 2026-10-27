@@ -1,0 +1,37 @@
+{
+  "name": "connecta",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "infra:up": "docker compose -f infra/docker-compose.dev.yml up -d",
+    "infra:down": "docker compose -f infra/docker-compose.dev.yml down",
+    "db:migrate": "npm run migrate -w @connecta/db",
+    "db:seed": "npm run seed -w @connecta/db",
+    "dev:web": "npm run dev -w @connecta/web",
+    "dev:api": "npm run dev -w @connecta/api",
+    "dev:realtime": "npm run dev -w @connecta/realtime",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "format": "prettier --write .",
+    "db:generate": "npm run generate -w @connecta/db",
+    "build:packages": "npm run build -w @connecta/shared && npm run build -w @connecta/db"
+  },
+  "devDependencies": {
+    "prettier": "^3",
+    "typescript": "^5.9.3"
+  },
+  "allowScripts": {
+    "prisma@7.10.1": true,
+    "@prisma/engines@7.10.1": true,
+    "esbuild@0.28.2": true
+  }
+}

@@ -1,0 +1,7 @@
+poc/
+docs/
+node_modules/
+.next/
+dist/
+**/generated/
+*.json

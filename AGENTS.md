@@ -83,7 +83,8 @@ Main repo of the capstone project · Connecta — an online platform for present
 
 ## Repo layout
 
-- `apps/web` (Next.js + Phaser 4) · `apps/server` (game server + API) · `packages/` (shared types when needed) · `infra/` (docker-compose, nginx, TURN, LiveKit, deploy)
+- npm workspaces · `apps/web` (Next.js + Phaser 4 + Better Auth) · `apps/api` (NestJS) · `apps/realtime` (Colyseus) · `packages/db` (Prisma schema, migrations, seed) · `packages/shared` (zod schemas, constants, hall map/placement logic) · `infra/` (docker-compose, nginx, LiveKit, deploy)
+- Dev: `cp .env.example .env` → `npm install` → `npm run infra:up` → `npm run db:migrate` → `npm run db:seed` → `npm run dev:api` · `dev:realtime` · `dev:web`
 - `poc/` experiments before implementation · `poc/demo-app/` the single POC app (`web/` + `realtime/`) grown spike by spike S1–S6 · other `poc/` folders: UI mockups · 2D maps · everything POC is documented in `poc/README.md`
 
 ## Next up
