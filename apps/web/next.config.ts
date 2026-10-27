@@ -1,9 +1,7 @@
 import path from 'node:path';
-import { loadEnvConfig } from '@next/env';
 import type { NextConfig } from 'next';
 
-// One .env at the repo root for every app
-loadEnvConfig(path.resolve(import.meta.dirname, '../..'));
+// env comes from the repo-root .env (package scripts pass --env-file) or the container
 
 const basePath = process.env.BASE_PATH || '';
 

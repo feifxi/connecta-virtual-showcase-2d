@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --port 3000",
-    "build": "next build",
-    "start": "next start --port 3000",
+    "dev": "node scripts/next.mjs dev --port 3000",
+    "build": "node scripts/next.mjs build",
+    "start": "node scripts/next.mjs start --port 3000",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
