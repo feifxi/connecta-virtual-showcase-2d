@@ -116,6 +116,8 @@ export class HallRoom extends Room<{ state: HallState; client: HallClient }> {
     const auth = client.auth!;
     // one avatar per person: a second tab replaces the first
     for (const other of this.clients) if (other !== client && other.auth?.userId === auth.userId) other.leave(4001, 'Opened in another tab');
+    // a dropped tab waiting to reconnect still has an avatar → the new session replaces it now
+    for (const [key, p] of this.state.players) if (p.userId === auth.userId) this.state.players.delete(key);
 
     const p = new Player();
     p.userId = auth.userId;
@@ -143,8 +145,12 @@ export class HallRoom extends Room<{ state: HallState; client: HallClient }> {
       reactTimes: [],
     };
     await redis.hset(boothKey(this.eventId), auth.userId, '');
-    client.send('chatHistory', this.chatAll);
     live.clients++;
+  }
+
+  /** Network blip: keep the avatar for a while so the client can reconnect without losing its spot */
+  async onDrop(client: HallClient) {
+    await this.allowReconnection(client, 20);
   }
 
   async onLeave(client: HallClient) {
@@ -255,6 +261,8 @@ export class HallRoom extends Room<{ state: HallState; client: HallClient }> {
         if (o && Math.hypot(o.x - p.x, o.y - p.y) <= HEAR_LEAVE_TILES * TILE) c.send('react', { sessionId: client.sessionId, emoji });
       }
     }),
+
+    'chat:history': (client: HallClient) => client.send('chatHistory', this.chatAll),
 
     ping: () => Date.now(),
   };

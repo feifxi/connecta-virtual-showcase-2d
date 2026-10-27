@@ -63,7 +63,8 @@ export class AttendanceController {
   @EventAccess('ATTENDEE')
   @HttpCode(201)
   async survey(@Access() ctx: AccessCtx, @CurrentUser() user: AuthUser, @Body() body: SurveyResponseDto) {
-    if (ctx.event.status !== 'EXHIBITION' && ctx.event.status !== 'ARCHIVED') throw new AppError('INVALID_STATUS_TRANSITION', 'The survey opens after the event');
+    // asked when leaving the hall (once per person) and after the event
+    if (ctx.event.status === 'DRAFT' || ctx.event.status === 'PUBLISHED') throw new AppError('INVALID_STATUS_TRANSITION', 'The survey opens with the hall');
     await this.attendance.survey(ctx, user, body.answers);
   }
 }
