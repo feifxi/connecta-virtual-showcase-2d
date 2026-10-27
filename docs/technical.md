@@ -1,6 +1,6 @@
 # Connecta — Technical
 
-> stack · architecture · deployment · reference ด้านเทคนิค · อิง `connecta-v3.md` และ `features.md`
+> stack · architecture · deployment · reference ด้านเทคนิค · อิง `connecta.md` และ `features.md`
 
 ## Stack
 
@@ -22,6 +22,8 @@
 | Poster | PDF → รูปตอนอัปโหลด (server) | ซูม/ชี้ sync ผ่าน Colyseus |
 | Infra | **Docker Compose + nginx** บน VM ของมหาวิทยาลัย | ฟรี · ย้ายขึ้น cloud ได้โดยไม่ต้องแก้โค้ด · nginx เพราะทีมมีประสบการณ์ |
 
+**เวอร์ชัน** (pin ตาม POC ที่ทดสอบผ่าน · อัปเกรดต้องอ่าน changelog ก่อน): Next.js 16.4 · Phaser 4.2.1 · Colyseus 0.18 (`colyseus` · `@colyseus/sdk` · `@colyseus/schema` 5) · LiveKit server 1.13.9 · `livekit-client` 2.22 · `livekit-server-sdk` 2.19 · Better Auth pin ตอนติดตั้ง
+
 **ขนาดงานเป้าหมาย**: 150 คนพร้อมกันต่อ 1 ฮอลล์ (ประมาณจาก D-Day 600+ คนทั้งวัน · 39 ผลงาน) · เพดาน 300 คน/ฮอลล์ · capacity และสเปก VM อยู่ใน `poc/README.md`
 
 **Frontend ใน `apps/web`** (mockup ใน `poc/` ไม่ได้ใช้ชุดนี้ · ย้ายมาเป็นแอปจริงต้องเขียนใหม่ตามนี้ ไม่ copy ตรงๆ)
@@ -35,13 +37,15 @@
 - ไม่ใช้: MUI / Chakra (หน้าตาสำเร็จรูปดึงออกจาก theme) · Redux (หนักเกินขนาดโปรเจค) · styled-components (ซ้อนกับ Tailwind · ไม่เข้ากับ Server Components) · axios (openapi-fetch ใช้ `fetch` อยู่แล้ว · `fetch` ใน Server Components ใช้ cache ของ Next.js ได้)
 
 **Phaser 4**
+- เวอร์ชัน: 4.0.0 stable 10 เม.ย. 2026 · ล่าสุด 4.2.1 (9 ก.ค. 2026) · v3 หยุดที่ 3.90 (*"likely the last version in the v3 tree"*)
+- สิ่งที่เปลี่ยนใน v4: renderer ใหม่ (pipeline → render node) · FX/mask รวมเป็น filter · `setTintFill()` ถูกลบ ใช้ `setTint()` + `setTintMode()` · `Geom.Point` → `Vector2` · ตัด Mesh/Plane/Camera3D/Layer3D · `roundPixels` default false · sprite · text · tilemap ย้ายจาก v3 ได้ง่าย
 - ⚠️ AI มักเขียน API ของ v3 (`setTintFill()` · `Geom.Point` · custom pipeline · Mesh) → ตรวจกับ docs v4 / migration guide ก่อน
 - ตัวอย่างโค้ด v3 (เช่น SkyOffice) ใช้เป็นแนวทางได้แต่ต้องแปลง
 - plugin ของ community (เช่น rexUI) ต้องเช็คว่ารองรับ v4 · UI ทำด้วย React
 - ⚠️ ห้ามใช้ `Graphics.generateTexture()` — ถือ scene และ WebGL context ของทุก game ที่ถูก destroy ไว้ผ่าน `Graphics.TargetCamera` (memory leak) · ใช้ไฟล์รูปแทน
 - Phaser ต้องโหลดฝั่ง client เท่านั้น (`next/dynamic` + `ssr: false`) · ตอน unmount ต้อง `game.destroy(true)`
 
-**3D viewer (Could)**
+**3D viewer (Could)** · `<model-viewer>` ของ Google · Apache 2.0 · ยังออก release ต่อเนื่อง (v4.4.0 ต.ค. 2026) · camera-orbit = theta/phi/radius
 1. รับ `.glb` / `.gltf` ≤20 MB · ตรวจ MIME/magic bytes ที่ server · เก็บ MinIO · ไฟล์ CAD/STL/OBJ ผู้นำเสนอแปลงเอง (Blender)
 2. บีบอัดด้วย `gltf-transform` (Draco/Meshopt) ตอนอัปโหลดถ้าจำเป็น
 3. `<model-viewer src camera-controls>` ในแผงบูธ · โหลด lazy ตอนเปิดแผง
@@ -52,7 +56,8 @@
 
 ```
 Browser (Next.js + Phaser 4)
- ├─ TCP 443 ──→ nginx (TLS) ──┬──→ api        (NestJS   :3000)  งาน · ผลงาน · rubric · คะแนน · feedback · analytics · AI
+ ├─ TCP 443 ──→ nginx (TLS) ──┬──→ web        (Next.js  :3000)  หน้าเว็บ · Better Auth `/api/auth/*`
+ │                             ├──→ api        (NestJS   :4000)  `/api/v1/*` งาน · ผลงาน · rubric · คะแนน · feedback · analytics · AI
  │                             ├──→ realtime   (Colyseus :2567)  1 room ต่อ 1 ฮอลล์ · ตำแหน่ง · สถานะบูธ · viewer sync
  │                             └──→ livekit    (signaling :7880)
  └─ UDP 50000-60000 ─────────────→ livekit    (media ตรง ไม่ผ่าน nginx)
@@ -64,6 +69,20 @@ realtime → postgres :5432 · redis :6379 · api (ตรวจสิทธิ�
 
 ⭐ **media เป็น UDP ผ่าน reverse proxy ไม่ได้ → browser ต้องต่อ LiveKit ตรง** ข้อนี้กำหนดการเลือก infra ทั้งหมด
 
+**Port**
+
+| Service | Port ภายใน | env |
+|---|---|---|
+| web (Next.js) | 3000 | `PORT` |
+| api (NestJS) | 4000 | `PORT` |
+| realtime (Colyseus) | 2567 | `PORT` |
+| livekit | 7880 signaling · 7881 TCP · UDP 50000-60000 media | `livekit.yaml` |
+| postgres · redis · minio | 5432 · 6379 · 9000 | — |
+
+- **ทุก service อ่าน port จาก env `PORT`** ไม่ hardcode · ค่าในตารางเป็นค่าเริ่มต้นใน `.env.example`
+- **production (docker-compose)**: publish ออก host เฉพาะ nginx (80 · 443) และ media ของ LiveKit (7881 TCP · UDP 50000-60000) · service อื่นไม่ publish · nginx เรียกด้วยชื่อ service เช่น `http://api:4000` · ⚠️ postgres · redis · minio ห้ามเปิดออกนอก
+- **frontend เรียก API ด้วย path เดียวกับ production** (`/api/v1/...`) ไม่ใส่ port · dev ใช้ `rewrites` ของ Next.js ส่ง `/api/v1/*` ไป `localhost:4000` → ไม่ต้องตั้ง CORS
+
 **Media ในฮอลล์ (ออกแบบ)**
 - 1 ฮอลล์ = 1 LiveKit room · ทุกคน publish ไมค์ได้ (ปกติ) · **client subscribe เฉพาะคนในรัศมี** (เริ่มที่ 5 ช่อง เท่า Gather · ตัดที่ 7 ช่อง)
 - จอแชร์ + กล้องผู้นำเสนอ: จอแชร์ + กล้อง publish ได้เฉพาะ PRESENTER ของบูธนั้น (ตรวจตอนออก token) · subscribe เฉพาะคนในโซนบูธ · simulcast
@@ -74,7 +93,8 @@ realtime → postgres :5432 · redis :6379 · api (ตรวจสิทธิ�
 **Auth (Better Auth)**
 - รันใน Next.js ที่ `/api/auth/*` · ต้องตั้ง `basePath` และ OAuth redirect URI ตาม path `/capstone26/CP26SSI3`
 - session เก็บใน DB → ban แล้วตัด session ได้ทันที
-- NestJS และ Colyseus (`onAuth`) ตรวจตัวตนด้วย **JWT plugin + JWKS** (`jose`) ไม่ต้องรู้ secret · JWT มีแค่ `userId` + app role · **event role เช็คจาก DB ทุกครั้ง**
+- NestJS ตรวจตัวตนด้วย **JWT plugin + JWKS** ของ Better Auth (`jose`) ไม่ต้องรู้ secret · JWT มีแค่ `userId` + app role · **event role เช็คจาก DB ทุกครั้ง**
+- Colyseus ไม่รับ JWT ของ Better Auth ตรงๆ · ต่อด้วย **ticket** อายุ 60 วินาที ที่ API ออกให้หลังผ่านด่านเข้าฮอลล์ (`POST /hall-tickets`) · ด่านเข้าฮอลล์จึงอยู่ใน API ที่เดียว · รายละเอียดใน `api.md` → Realtime
 - Microsoft: tenant `common` (บัญชีองค์กร + ส่วนตัว) · scope `openid profile email` · @kmutt.ac.th เป็นบัญชี Microsoft · ⚠️ ต้องลอง login ด้วยบัญชี kmutt ว่ากดยินยอมแอปภายนอกเองได้ไหม — ถ้าเจอ "Need admin approval" ต้องขอ IT ทำ admin consent · ระหว่างนั้นใช้ magic link ไปที่เมล kmutt
 - API เปลี่ยนระหว่าง minor version → **pin version และอ่าน docs ตรงเวอร์ชัน**
 - อีเมล (magic link · คำเชิญ · ผลคะแนนถึงผู้นำเสนอ): **Gmail ของทีมผ่าน SMTP** (nodemailer + app password) · ฟรี ส่งได้ ~500 ฉบับ/วัน · ⚠️ ส่งอัตโนมัติเยอะ Google อาจระงับชั่วคราว → magic link เป็นทางสำรอง (ปุ่ม Google/Microsoft อยู่บน) · ไม่พอค่อยเปลี่ยนเป็น Brevo (ฟรี 300/วัน) แค่แก้ค่า SMTP · Interested / survey ใช้ in-app + `Add to calendar` ไม่ส่งอีเมล
@@ -110,7 +130,7 @@ realtime → postgres :5432 · redis :6379 · api (ตรวจสิทธิ�
 | **WorkAdventure** | ⚠️ **AGPL v3 + Commons Clause** | production-grade ที่ใกล้ที่สุด · **อ่านได้ ห้ามลอกโค้ด** — license ห้ามขายเป็น SaaS |
 | LiveKit server | Apache 2.0 ✅ | ใช้เชิงพาณิชย์ได้ |
 | [`<model-viewer>`](https://modelviewer.dev) · [releases](https://github.com/google/model-viewer/releases) (Google) | Apache 2.0 ✅ | ดูโมเดล 3D ในบูธ · event `camera-change` · `getCameraOrbit()` |
-| [Colyseus 0.16 — StateView](https://colyseus.io/blog/colyseus-016-is-here/) · [Migrating to 0.17](https://docs.colyseus.io/migrating/0.17) | MIT ✅ | แยกข้อมูลที่ client เห็นตามฮอลล์/โซน |
+| [Colyseus docs](https://docs.colyseus.io) · [StateView (เพิ่มใน 0.16)](https://colyseus.io/blog/colyseus-016-is-here/) | MIT ✅ | ใช้ 0.18 · `StateView` แยกข้อมูลที่ client เห็นตามโซน · เช็คกับ docs ของ 0.18 ก่อนใช้ |
 | [Phaser 4 download](https://phaser.io/download/stable) · [Phaser 3 → 4 migration](https://phaser.io/news/2026/04/migrating-from-phaser-3-to-phaser-4-what-you-need-to-know) · [Phaser v3.90](https://phaser.io/news/2025/05/phaser-v390-released) | MIT ✅ | ⭐ ใช้ตรวจ API ของ v4 · โค้ดตัวอย่างของ v3 ต้องแปลงตาม migration guide |
 | [`phaserjs/template-nextjs`](https://github.com/phaserjs/template-nextjs) | MIT ✅ | template ทางการ Phaser 4 + Next.js — จุดเริ่มของ S1 |
 | `github.com/topics/virtual-office` | — | หลายตัวใช้ Phaser + Colyseus + LiveKit |

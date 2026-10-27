@@ -13,7 +13,9 @@
 - **ตรวจกติกาที่ server** — constraint ที่ DB ทำได้ใส่ที่ DB (UNIQUE · CHECK · FK) · กติกาที่ข้ามตาราง (limit ของ plan · จำนวนกรรมการ) ตรวจใน service ภายใน transaction
 - **ไม่เก็บของ ephemeral** — เสียง · วิดีโอ · proximity chat · public chat · reaction · ตำแหน่งดิบ (ดู [ไม่เก็บลง DB](#ไม่เก็บลง-db))
 - **snapshot ข้อมูลที่ใช้ทำ analytics** — ประเภทผู้ใช้ + จังหวัดคัดลอกลง `event_attendees` ตอนเข้างาน แก้ profile ทีหลัง analytics งานเก่าไม่เปลี่ยน
-- เวลาเป็น `timestamptz` ทุกช่อง
+- เวลาเป็น `timestamptz` ทุกช่อง · อีเมลเป็น `citext` (ไม่แยกตัวพิมพ์เล็ก-ใหญ่ · `A@x` = `a@x`)
+- **`event_id` ที่ซ้ำกับของ `projects`** (`votes` · `judge_assignments`) ใช้ **composite FK** `(project_id, event_id) → projects(id, event_id)` กันค่าไม่ตรงกัน
+- ตาราง analytics/log (`presence_sessions` · `booth_visits` · `heatmap_counts` · `analytics_events` · `audit_logs`) **ไม่มี FK** เพื่อเขียนเร็ว → ลบงานต้องลบตารางเหล่านี้เองใน service
 
 ---
 
@@ -21,13 +23,8 @@
 
 ฐานข้อมูลเดียว (PostgreSQL) ที่ทั้งแอปใช้ร่วมกัน: Next.js (Better Auth) · NestJS API · Colyseus (โหลดบูธ · เขียน analytics) · อ่านจากบนลงล่าง: **งาน → คนในงาน · ฮอลล์ → ผลงาน/บูธ → Judging**
 
-![ภาพรวมข้อมูล](images/data-model-concept.png)
-
-- เส้นทึบ = เป็นของ (งานมีฮอลล์ · ผลงานมีไฟล์) · เส้นประ = อ้างถึง (ผลงานวางอยู่ที่ช่องบูธ · ใบคะแนนเป็นของผลงาน)
-- **ผู้ใช้ (บัญชี)** ไม่ได้วาดเพื่อไม่ให้เส้นรก — ผู้ใช้เชื่อมกับ: role ในงาน · ผู้เข้างาน · ทีมผู้นำเสนอ · ใบคะแนน (ในฐานะกรรมการ) · feedback / vote / ขอให้ติดต่อกลับ (ในฐานะผู้ชม)
-- แก้ภาพ: แก้ `images/data-model-concept.mmd` แล้ว render ใหม่ด้วย `npx @mermaid-js/mermaid-cli -i images/data-model-concept.mmd -o images/data-model-concept.png -s 2 -b white`
-- **ER diagram แบบละเอียด** (ทุกช่อง + ชนิด) แยกตามหมวด · ตารางจากหมวดอื่นแสดงแค่ `id` · source `db/connecta.dbml` (วางใน dbdiagram.io เพื่อจัดวาง/export ได้) · render ใหม่: `node docs/db/render.mjs` · แก้ตารางในไฟล์นี้แล้วต้องแก้ `.dbml` ให้ตรงกัน · ตอน implement ให้ generate จาก Prisma schema แทน
-    - [บัญชี](images/db-account.svg) · [งานและคน](images/db-event_people.svg) · [ฮอลล์ · ผลงาน · ไฟล์](images/db-hall_project.svg) · [เข้างาน · ในงาน](images/db-in_event.svg) · [Judging](images/db-judging.svg) · [Analytics · log](images/db-analytics.svg)
+- **ผู้ใช้ (บัญชี)** เชื่อมกับ: role ในงาน · ผู้เข้างาน · ทีมผู้นำเสนอ · ใบคะแนน (ในฐานะกรรมการ) · feedback / vote / ขอให้ติดต่อกลับ (ในฐานะผู้ชม)
+- **ER diagram** generate จาก Prisma schema ตอน implement
 
 | กล่องในภาพ | ตารางจริง |
 |---|---|
@@ -54,7 +51,7 @@
 | ช่อง | ชนิด | หมายเหตุ |
 |---|---|---|
 | id | uuid PK | |
-| email | text UK | อีเมลหลัก (จาก OAuth / magic link) |
+| email | citext UK | อีเมลหลัก (จาก OAuth / magic link) |
 | email_verified | bool | |
 | name | text | จาก OAuth |
 | display_name | text | onboarding · เติมจาก `name` |
@@ -80,7 +77,7 @@
 | ช่อง | ชนิด | หมายเหตุ |
 |---|---|---|
 | user_id | uuid FK | |
-| email | text | UK (email) — 1 อีเมลผูกได้บัญชีเดียว |
+| email | citext | UK (email) — 1 อีเมลผูกได้บัญชีเดียว |
 | verified_at | timestamptz | เวลาที่กดลิงก์คำเชิญ |
 
 **`notifications`** — id · user_id FK · kind text · payload jsonb · read_at? · created_at · index (user_id, read_at)
@@ -109,7 +106,7 @@
 | results_announced_at | timestamptz? | null = ยังไม่ประกาศ → ผู้นำเสนอ/ผู้ชมยังไม่เห็นผล |
 | allowed_domain | text? | เช่น `kmutt.ac.th` · ใช้กับ Visitor เท่านั้น |
 | booth_deadline | timestamptz? | เตือนเท่านั้น ไม่ล็อก |
-| hall_preset | text | `room` · `hall` |
+| submissions_open | bool | default false · true = User ส่งผลงานผ่านฟอร์มส่งผลงานได้ |
 | suspended_at | timestamptz? | Platform Admin ระงับงาน |
 | created_at · updated_at | timestamptz | |
 - index: (status, starts_at) สำหรับหน้า Explore · created_by
@@ -127,7 +124,7 @@
 | ช่อง | ชนิด | หมายเหตุ |
 |---|---|---|
 | event_id · user_id | uuid FK | PK (event_id, user_id) |
-| roles | `event_role`[] | `ADMIN` · `PRESENTER` · `JUDGE` · **array** เพื่อ multi-role · ไม่มีแถว = Visitor |
+| roles | `event_role`[] | `ADMIN` · `PRESENTER` · `JUDGE` · **array** เพื่อ multi-role · ไม่มีแถว = Visitor · ตั้งใจไม่แยกแถวละ role: มีแค่ 3 ค่าตายตัว · อ่านครั้งเดียวได้ทุก role · ตรวจ Admin ≥ 1 ด้วย `'ADMIN' = ANY(roles)` |
 | assigned_by | uuid FK users | |
 | assigned_at | timestamptz | |
 - index: GIN (roles) · (user_id) สำหรับหน้า Home
@@ -138,7 +135,7 @@
 |---|---|---|
 | id | uuid PK | |
 | event_id | uuid FK | |
-| email | text | lowercase |
+| email | citext | |
 | roles | `event_role`[] | |
 | project_id | uuid FK? | คำเชิญ PRESENTER ของบูธไหน |
 | token_hash | text UK | เก็บแค่ hash |
@@ -161,6 +158,7 @@
 | id | uuid PK | |
 | event_id | uuid FK UK | |
 | source | `hall_source` | `PRESET` · `CUSTOM` (map editor ภายหลัง) |
+| preset | text? | `room` · `hall` · null เมื่อ `CUSTOM` |
 | map_json | jsonb | Tiled JSON (พื้น · ผนัง · ของตกแต่ง · layer `blocks` + `slots`) |
 
 **`booth_slots`** — ช่องบูธ (แตกจาก layer `slots` ของแมปตอนสร้างฮอลล์)
@@ -189,6 +187,7 @@
 | ai_enabled | bool | ผู้นำเสนอเปิด AI ของบูธ (ต้องเปิด module ระดับงานด้วย) |
 | created_at · updated_at | timestamptz | |
 - index: (event_id, category_id) · GIN full-text บน title + summary + tags สำหรับค้นหา
+- UK (id, event_id) ให้ตารางลูกอ้างด้วย composite FK
 
 **`project_members`** — project_id FK · user_id FK · PK (project_id, user_id) · คนที่เป็น PRESENTER ของบูธนั้น
 
@@ -248,7 +247,7 @@
 | created_at | timestamptz | |
 - เห็นแค่ผู้นำเสนอของบูธ + Admin · ไม่มี API สาธารณะ
 
-**`votes`** — event_id · user_id · project_id · created_at · **PK (event_id, user_id, project_id)** · ถอน = ลบแถว · ตรวจใน service: งานยังไม่จบ · แวะบูธแล้ว (`booth_visits`) ถ้าผู้จัดเปิดเงื่อนไขนี้
+**`votes`** — event_id · user_id · project_id · created_at · **PK (event_id, user_id, project_id)** · FK (project_id, event_id) → projects · ถอน = ลบแถว · ตรวจใน service: งานยังไม่จบ
 
 **`contact_requests`** — id · project_id FK · user_id FK · email · phone? · link? · message? · created_at · **UK (project_id, user_id)** · ถอน = ลบแถว · เห็นแค่ผู้นำเสนอของบูธนั้น
 
@@ -281,7 +280,7 @@
 | weight | numeric(5,2) | CHECK > 0 · แก้ไม่ได้หลังล็อก |
 | sort | int | |
 
-**`judge_assignments`** — event_id · judge_id · project_id · PK (judge_id, project_id) · ไม่มีแถวเลยในงาน = กรรมการทุกคนตัดสินทุกผลงาน
+**`judge_assignments`** — event_id · judge_id · project_id · PK (judge_id, project_id) · FK (project_id, event_id) → projects · ไม่มีแถวเลยในงาน = กรรมการทุกคนตัดสินทุกผลงาน
 
 **`score_sheets`** — ใบคะแนน 1 ใบต่อกรรมการต่อผลงาน
 | ช่อง | ชนิด | หมายเหตุ |
@@ -291,7 +290,7 @@
 | status | `sheet_status` | `DRAFT` · `SUBMITTED` |
 | comment | text? | |
 | comment_visible | bool | ผู้จัดซ่อนก่อนส่งให้ผู้นำเสนอได้ |
-| submitted_at · updated_at | timestamptz | |
+| submitted_at? · updated_at | timestamptz | `submitted_at` null = ยัง DRAFT |
 - **ตอนจบงาน**: DRAFT ที่ครบทุกเกณฑ์ → SUBMITTED อัตโนมัติ · ไม่ครบ = ไม่นับ
 
 **`scores`** — sheet_id FK · criterion_id FK · score numeric · **PK (sheet_id, criterion_id)** · CHECK 0 ≤ score ≤ max_score (ตรวจใน service เพราะ max อยู่อีกตาราง)
@@ -304,7 +303,7 @@
 
 **`presence_sessions`** — id bigserial · event_id · user_id · joined_at · left_at? · ใช้นับคนพร้อมกัน · เวลาอยู่เฉลี่ย · กราฟคน online · ⚠️ ghost connection: server ปิด session ที่ไม่มี heartbeat
 
-**`booth_visits`** — id bigserial · event_id · project_id · user_id · entered_at · left_at? · ใช้ทำคนแวะ · เวลาในบูธ · เงื่อนไข "แวะบูธก่อนโหวต" · index (project_id, user_id)
+**`booth_visits`** — id bigserial · event_id · project_id · user_id · entered_at · left_at? · ใช้ทำคนแวะ · เวลาในบูธ · index (project_id, user_id)
 
 **`heatmap_counts`** — event_id · cell_x · cell_y · minute timestamptz · samples int · PK (event_id, cell_x, cell_y, minute)
 - realtime server สุ่มตำแหน่งทุก ~5 วิ → นับใส่ช่อง 2×2 tile ใน memory → เขียนลง DB ทุก 1 นาที · **ไม่เก็บตำแหน่งดิบรายคน**
@@ -379,7 +378,9 @@ stateDiagram-v2
 
 - `players`: sessionId → { userId, name, x, y, badges[] } · badge ออกจาก server จาก `event_members`
 - `booths`: slotId → { projectId, title, zone, live, count } · โหลดจาก `projects` + `booth_slots` ตอนเปิด room · บูธเพิ่มระหว่างงาน → เขียน DB ก่อนแล้วค่อย patch state
-- room ว่าง → ถูกทิ้ง (`autoDispose`) · เปิดใหม่โหลดจาก DB
+- `settings`: { entryPaused } · สวิตช์ฉุกเฉินปิดรับคนเข้าใหม่ (mute ทั้งงานเป็นคำสั่งครั้งเดียวผ่าน LiveKit ไม่ใช่ state)
+- `chatAll`: ประวัติแท็บ Everyone + Announcement ตลอดช่วงงาน · ล้างเมื่องานจบ · Nearby chat ไม่มีประวัติ
+- room ว่าง → ถูกทิ้ง (`autoDispose`) · เปิดใหม่โหลดจาก DB · `entryPaused` · `chatAll` หายไปด้วย
 - Redis: ยังไม่ใช้ใน MVP (วาง interface ไว้สำหรับหลาย process)
 
 ## ไฟล์ (MinIO)

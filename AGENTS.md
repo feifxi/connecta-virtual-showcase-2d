@@ -8,32 +8,25 @@ Repo หลักของโปรเจคจบ · Connecta — แพลต�
 
 | ไฟล์ | ใช้ทำอะไร |
 |---|---|
-| `docs/connecta-v3.md` | ⭐ Product & Business: direction · pain · solution · target · value & competition · business model · SDG · ความเสี่ยง |
+| `docs/connecta.md` | ⭐ Product & Business: direction · pain · solution · target · value & competition · business model · SDG · ความเสี่ยง |
 | `docs/features.md` | ⭐ spec ฟีเจอร์: กฎร่วม · ลำดับ core/cut · role · spec รายฟีเจอร์ตามแม่แบบ (ทำไม · ใครทำอะไร · เปิด/ปิด · ใครเห็น · Plan · กติกา · ไม่ทำ · ข้อมูล · Test) |
 | `docs/data-model.md` | ⭐ database design: ER diagram · ตาราง · constraint · index · enum · สถานะงาน · ข้อมูลที่ไม่เก็บ · state ใน memory · ไฟล์ · lifecycle/PDPA |
 | `docs/api.md` | ⭐ REST API ทั้งหมด · error · status code · message ของ Colyseus · สิทธิ์ใน LiveKit |
-| `docs/db/connecta.dbml` | schema แบบละเอียด (PostgreSQL) → ภาพ `docs/images/db-*.svg` |
-| `docs/exam2-technical-design.md` | ⭐ การออกแบบทางเทคนิคสำหรับ Exam 2 เฉพาะ Release 1 + ขอบเขต R1–R3 |
 | `docs/technical.md` | ⭐ stack · architecture · deployment · reference ด้านเทคนิค |
 | `poc/README.md` | ⭐ POC ทั้งหมด: แผน spike · สถานะ · วิธีทดสอบ · ผล · capacity · สเปก VM · สิ่งที่ต้องขอจาก IT · fallback |
-| `docs/research.md` | research ดิบ + แหล่งอ้างอิง: poster/booth · คู่แข่ง · business model · ชื่อแบรนด์ · survey · research เพิ่มเติม |
 | `docs/consult_connecta.md` | ผลสอบกรรมการภายนอก (26 ก.ย. 2569) ของทีมเรา · ที่พลาด · สิ่งที่ควรทำต่อ |
-| `docs/proposal/CP26SSI3_InitialProposal.pdf` | proposal ปัจจุบัน |
-| `docs/Exam02_Details.pdf` | ⭐ รายละเอียดและเกณฑ์ Exam 2 |
-| `docs/archive/CAPSTONE-CourseOverview.pdf` | สไลด์ภาพรวมวิชา (ประกาศเบื้องต้น): ความคาดหวัง · คะแนนทุก Exam · กำหนดการ · งบ · ลิขสิทธิ์ · **ประกาศของแต่ละ Exam ที่ออกทีหลังมีผลเหนือกว่า** |
-| `docs/presentation/` | สไลด์ที่ส่งแล้ว (ห้ามแก้) |
-| `docs/archive/` | เอกสารที่ไม่ใช้แล้ว (ไม่ลบ · ไม่ต้องอ่านเว้นแต่ถูกขอ) · transcript การสอบ · ผล consult ของทีมอื่น |
+| `docs/archive/` | ไม่ต้องอ่านเว้นแต่ถูกขอ · `connecta.md` เวอร์ชันเก่า · ผล consult ของทีมอื่น · template proposal |
 
 ## Direction
 
 - **โฟกัสงานนำเสนอผลงานของนักศึกษา** (งานโปรเจคจบ · โปสเตอร์ในรายวิชา) — ใกล้ตัว ทดสอบได้จริง และเป็นส่วนที่ Zoom/Teams ทำได้ไม่ดี
 - core โลก 2D ใช้ได้ทุก domain → ถ้าพบ insight ที่ดีกว่า (เช่น poster session งานประชุมวิชาการ) ปรับ use case ได้โดยไม่ต้องรื้อ
-- รายละเอียดอยู่ใน `docs/connecta-v3.md` · **ก่อนเขียนโค้ดให้อ่าน `docs/features.md` · `docs/data-model.md` · `docs/technical.md`**
+- รายละเอียดอยู่ใน `docs/connecta.md` · **ก่อนเขียนโค้ดให้อ่าน `docs/features.md` · `docs/data-model.md` · `docs/technical.md`**
 
 ## กติกาเอกสาร context หลัก
 
-- กติกาเลขเวอร์ชันใช้กับ `connecta-vN.md` (Product & Business) เท่านั้น · `features.md` · `data-model.md` · `technical.md` แก้ในไฟล์เดิมได้เลย · เพิ่มหรือแก้ฟีเจอร์ต้องตอบ checklist บนหัว `features.md` และแก้ตารางใน `data-model.md` ให้ตรงกัน
-- เปลี่ยน direction ใหญ่ → ย้ายไฟล์ปัจจุบันไป `docs/archive/deprecated-connecta-vN.md` แล้วสร้าง `docs/connecta-v(N+1).md`
+- กติกาเลขเวอร์ชันใช้กับ `connecta.md` (Product & Business) เท่านั้น · `features.md` · `data-model.md` · `technical.md` แก้ในไฟล์เดิมได้เลย · เพิ่มหรือแก้ฟีเจอร์ต้องตอบ checklist บนหัว `features.md` และแก้ตารางใน `data-model.md` ให้ตรงกัน
+- เปลี่ยน direction ใหญ่ → ย้ายไฟล์ปัจจุบันไป `docs/archive/deprecated-connecta-vN.md` (N = เลขถัดจากไฟล์ล่าสุดใน archive) แล้วเขียน `docs/connecta.md` ใหม่
 - ไฟล์ใหม่ต้อง**แทนที่ไฟล์เก่า 100%** — ข้อมูลที่ยังใช้ต้องยกมาครบ **ห้ามอ้างถึงไฟล์เก่า**
 - ชื่อไฟล์ใน `archive/` ใช้รูปแบบ `deprecated-<ชื่อ>-vN.md`
 
@@ -43,20 +36,20 @@ Repo หลักของโปรเจคจบ · Connecta — แพลต�
 - **อย่าเดา ให้ research** และบอกแหล่งที่มา · ตอบตรงๆ ไม่อวย
 - เอกสาร**กระชับ** อ่านได้ทั้งคนและ agent · ไม่อธิบายเกินจำเป็น · ไม่เว้นบรรทัดเกิน
 - **เขียนแค่สถานะปัจจุบัน** — ไม่บอกว่าก่อนหน้านี้เป็นอะไร เปลี่ยนจากอะไร หรืออะไรใหม่ (ไม่มี "เดิม" · "🆕" · "เปลี่ยนจาก" · วันที่ที่แก้) · ประวัติอยู่ใน git และ `archive/`
-- **ตัดสินใจแล้วเขียนแค่สิ่งที่เลือก** + เหตุผลสั้นๆ · การเปรียบเทียบตัวเลือกเก็บใน `research.md`
+- **ตัดสินใจแล้วเขียนแค่สิ่งที่เลือก** + เหตุผลสั้นๆ · ไม่เก็บการเปรียบเทียบตัวเลือก
 - **Pain → Solution ก่อน แล้วค่อยชูจุดแข็ง** · ห้ามเอาจุดแข็งไปเปลี่ยนตัวตนของ product
 - **ไม่เขียนออกตัว/ลดค่าตัวเอง** (เช่น "ไม่ได้แข่งเรื่อง X เพราะเจ้าใหญ่ทำแล้ว") · ชูข้อดี แต่ไม่เคลมเกินจริง
 - **ห้ามแก้นิยามหลักที่ผู้ใช้/ทีมเขียนเอง** (แนวคิด · pain point · problem statement) · แก้ใหญ่ต้องให้ดูก่อน · ย่อเอกสารห้ามตัดของผู้ใช้ทิ้งเงียบๆ ต้องบอกว่าตัดอะไร
 - เนื้อหา proposal **ส่งในแชท** ไม่แก้ไฟล์ เว้นแต่สั่ง · ถ้าจะแปะลง Word: ห้าม code block · ห้าม `<br>` · ตารางไม่เกิน 4 คอลัมน์
 - โปรเจคนักศึกษา **ไม่ต้องชนะคู่แข่ง** แต่ต้องบอกได้ว่าต่างยังไง · เรียนรู้ pattern จากเจ้าใหญ่ได้
-- เอกสารเก่าที่ไม่ใช้แล้วย้ายไป `docs/archive/` ไม่ลบ
+- เอกสารที่ไม่ใช้แล้วลบได้ (ประวัติอยู่ใน git) · ยกเว้น `connecta.md` ที่ต้องย้ายไป `archive/` ตามกติกาเลขเวอร์ชัน
 - ห้าม commit `.env`/key (ใช้ `.env.example`) · ไฟล์ใหญ่ (วิดีโอ สไลด์หนัก) เก็บ Drive แล้ววางลิงก์ หรือใช้ Git LFS · repo เป็น private
 
 ## เกณฑ์ของวิชา (INT365/371)
 
 | Exam | กำหนด | สิ่งที่ประเมิน |
 |---|---|---|
-| Exam 2 Pre-Game (30) | สอบ 19–20 ต.ค. 2569 13:00 (มาก่อน 15 นาที) · **ส่งภายใน 18 ต.ค. 23:59** ทาง LEB2: `<รหัสทีม>_RevisedProjectProposal.pdf` · `<รหัสทีม>_Exam02_Slide.pdf` (ส่งช้าหักคะแนน) · **นำเสนอภาษาอังกฤษ** ≤ 25 นาทีรวมเดโม + ถาม-ตอบ 10 นาที · ทุกคนต้องพูดและตอบ | **ความเป็นไปได้ 12** (POC ทางเทคนิค + research/สัมภาษณ์/แบบสอบถามทางธุรกิจ · ไม่บังคับครบทั้งสองด้าน) · **ออกแบบทางเทคนิค 10** สำหรับ Release 1 (mockup · architecture · frontend component design · REST API design · ER diagram) · Revised IT Solution 6 (สรุปความเห็นกรรมการ 1 slide · ภาพรวม/ประเภทแอป/ขอบเขต · ผู้ใช้ + feature) · Roadmap 2 · ผลการดำเนินงานตามแผน · ปัญหาและอุปสรรค |
+| Exam 2 Pre-Game (30) | ✅ สอบแล้ว 19–20 ต.ค. 2569 | POC · ออกแบบทางเทคนิค R1 · Revised IT Solution · Roadmap |
 | Exam 3 Release 1 (35) | 30 พ.ย. 13:30–18:00 / 1 ธ.ค. 09:00–18:00 (tentative) | ความก้าวหน้า/ความยาก/ปริมาณงาน 13 · Potentially Shippable Increment 7 (test case ปกติ + exception · exception handling · ไม่มี error · **deploy บน server ไม่ใช่ localhost**) · หลักฐาน AI-assisted development 5 · ความเข้าใจระบบ 10 · ส่ง Retrospective Report รายคน |
 
 - **Release 1 = core feature อย่างน้อย 1 ตัว ครบ Frontend → Backend → DB** · login ไม่นับเป็น core feature
@@ -78,7 +71,7 @@ Repo หลักของโปรเจคจบ · Connecta — แพลต�
 
 - stack · architecture อยู่ใน `docs/technical.md` · spike และผลทดสอบอยู่ใน `poc/README.md`
 - ใช้ **nginx** (ทีมมีประสบการณ์) · ต้องตั้งเอง: certbot · header WebSocket (`Upgrade`/`Connection`) · TURN over TLS บน 443 ด้วย `stream` + `ssl_preread`
-- spike **S1–S7** (S1 Phaser 4+Tiled · S2 LiveKit hello · S3 Movement sync · S4 Proximity media · S5 เสียงโซนบูธ · S6 Poster/3D viewer sync · S7 NAT+TURN) · S1–S6 = POC app เดียว · S7 ทดสอบบน VM แยก · **Exam 2 ทำถึง S4** (เดโม S1–S4) · สถานะอยู่ใน `poc/README.md`
+- spike **S1–S7** (S1 Phaser 4+Tiled · S2 LiveKit hello · S3 Movement sync · S4 Proximity media · S5 เสียงโซนบูธ · S6 Poster/3D viewer sync · S7 NAT+TURN) · S1–S6 = POC app เดียว · S7 ทดสอบบน VM แยก · S1–S4 เสร็จแล้ว · เหลือ S5–S7 · สถานะอยู่ใน `poc/README.md`
 - ไม่ต้องเข้าไปดู repo `poc-connecta`
 
 ## กติกาเขียนโค้ด
@@ -97,8 +90,8 @@ Repo หลักของโปรเจคจบ · Connecta — แพลต�
 
 ## งานถัดไป
 
-1. Exam 2 (ส่ง 18 ต.ค.): spike/POC · mockup (ภาพจาก `poc/ui-mockup-v2/` ที่ทีมเลือกเป็น theme หลัก · v1 เก็บไว้เทียบ) · architecture · component design · API design · ER diagram · roadmap
-2. ทีมเขียน one-liner · pain · problem statement เอง แทนร่างใน `docs/connecta-v3.md`
-3. ทำ survey (`docs/research.md` ส่วน 4) + นัดคุยผู้จัด D-Day / อาจารย์ · ความเป็นไปได้ทางธุรกิจต้องใช้ข้อมูลจากผู้ใช้เป้าหมายจริง (ไม่ใช่ทีม)
-4. UI mockup v1 + v2 ตรงกับ `docs/features.md` แล้ว (14 หน้า · รายการหน้าอยู่ใน `poc/README.md`) · หน้าที่ยังไม่ทำ: Profile · Billing · Platform Console · สรุปของผู้นำเสนอ · ฟอร์มส่งผลงาน
+1. Exam 3 Release 1 (30 พ.ย.): implement ใน `apps/` + deploy บน server · ขอบเขตอยู่ใน `docs/features.md` → Release plan · UI ใช้ `poc/ui-mockup-v2/` เป็น theme หลัก
+2. ทีมเขียน one-liner · pain · problem statement เอง แทนร่างใน `docs/connecta.md`
+3. ทำ survey + นัดคุยผู้จัด D-Day / อาจารย์ · ความเป็นไปได้ทางธุรกิจต้องใช้ข้อมูลจากผู้ใช้เป้าหมายจริง (ไม่ใช่ทีม)
+4. UI mockup v1 + v2 ตรงกับ `docs/features.md` แล้ว (รายการหน้าอยู่ใน `poc/README.md`) · หน้าที่ยังไม่ทำ: Profile · Billing · Platform Console · สรุปของผู้นำเสนอ · ฟอร์มส่งผลงาน
 5. เช็ค SpatialChat ว่ามี judging หรือไม่

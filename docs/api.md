@@ -1,14 +1,14 @@
 # Connecta — API Design
 
-> REST API ของ NestJS ทั้งหมด + message ของ Colyseus + สิทธิ์ใน LiveKit · อิง `features.md` (กติกา) และ `data-model.md` (ตาราง) · ฉบับย่อเฉพาะ Release 1 อยู่ใน `exam2-technical-design.md`
+> REST API ของ NestJS ทั้งหมด + message ของ Colyseus + สิทธิ์ใน LiveKit · อิง `features.md` (กติกา) และ `data-model.md` (ตาราง)
 
 ---
 
 ## หลักการ
 
-- **Base URL**: `https://bscit.sit.kmutt.ac.th/capstone26/CP26SSI3/api/v1` (nginx → NestJS `:3000`) · `/api/auth/*` เป็นของ Better Auth ใน Next.js ไม่อยู่ในเอกสารนี้
+- **Base URL**: `https://bscit.sit.kmutt.ac.th/capstone26/CP26SSI3/api/v1` (nginx → NestJS `:4000`) · `/api/auth/*` เป็นของ Better Auth ใน Next.js ไม่อยู่ในเอกสารนี้
 - **Auth**: `Authorization: Bearer <JWT>` (JWT plugin ของ Better Auth · มีแค่ `userId` + `appRole`) · **event role เช็คจาก DB ทุก request** ไม่เชื่อ JWT/client
-- **Resource เป็นคำนามพหูพจน์** · ของที่เป็นของงานอยู่ใต้ `/events/{eventId}/...` · ของที่ id ไม่ซ้ำทั้งระบบเข้าตรงได้ (`/projects/{projectId}`) — ซ้อนไม่เกิน 1 ชั้น
+- **Resource เป็นคำนามพหูพจน์** · ของที่เป็นของงานอยู่ใต้ `/events/{eventId}/...` · ของที่ id ไม่ซ้ำทั้งระบบเข้าตรงได้ (`/projects/{projectId}`) — ซ้อนไม่เกิน 1 ชั้น · sub-resource ที่มีชิ้นเดียว (`/hall` · `/rubric` · `/microphone` · `/me`) ไม่นับเป็นชั้น
 - **ไม่มีคำกริยาใน URL** — เปลี่ยนสถานะด้วย `PATCH` (เช่น `PATCH /events/{id} {status}`) · การกระทำที่สร้างของใหม่เป็น `POST` ไปที่ collection (เช่น ประกาศผล = `POST /events/{id}/awards`) · ของที่มีได้ 1 ชิ้นต่อคนใช้ `PUT .../me` (idempotent)
 - **JSON** · ช่องเป็น `camelCase` · id เป็น uuid · เวลาเป็น ISO 8601 UTC · อัปโหลดไฟล์เป็น `multipart/form-data` ผ่าน API (server ตรวจ MIME จาก magic bytes ก่อนเก็บ MinIO)
 - **List**: `?limit=20&cursor=...` → `{ "data": [...], "nextCursor": "..." | null }`
@@ -38,10 +38,10 @@
 | 202 | รับงานไปทำต่อ (ส่งอีเมล · แปลงไฟล์) | — |
 | 400 | body/query ผิดรูปแบบ (validation) | `VALIDATION_FAILED` |
 | 401 | ไม่มี/หมดอายุ JWT | `UNAUTHENTICATED` |
-| 402 | เกิน limit ของ plan | `PLAN_LIMIT` (capacity · กรรมการคนที่ 6 · AI ในงาน Free) |
+| 402 | เกิน limit ของ plan | `PLAN_LIMIT` (capacity · กรรมการคนที่ 6 · AI ในงาน Free) · ตั้งใจใช้ 402 แยกจาก 403: แก้ได้ด้วยการอัปเกรด ไม่ใช่ไม่มีสิทธิ์ |
 | 403 | login แล้วแต่ไม่มีสิทธิ์ | `FORBIDDEN_ROLE` · `BANNED` · `DOMAIN_NOT_ALLOWED` · `NOT_ASSIGNED` · `MODULE_DISABLED` |
 | 404 | ไม่พบ หรือมีอยู่แต่ผู้เรียกไม่ควรรู้ว่ามี (งาน Draft) | `NOT_FOUND` |
-| 409 | ขัดกับสถานะปัจจุบัน | `HALL_FULL` · `INVALID_STATUS_TRANSITION` · `LAST_ADMIN` · `RUBRIC_LOCKED` · `JUDGING_CLOSED` · `ALREADY_EXISTS` · `HALL_NO_SLOT` · `NOT_VISITED` · `JOIN_FORM_REQUIRED` |
+| 409 | ขัดกับสถานะปัจจุบัน | `HALL_FULL` · `INVALID_STATUS_TRANSITION` · `LAST_ADMIN` · `RUBRIC_LOCKED` · `JUDGING_CLOSED` · `ALREADY_EXISTS` · `HALL_NO_SLOT` · `SUBMISSIONS_CLOSED` · `JOIN_FORM_REQUIRED` |
 | 410 | token ใช้ไม่ได้แล้ว | `INVITE_EXPIRED` · `INVITE_REVOKED` · `INVITE_USED` |
 | 412 | `If-Match` ไม่ตรง (มีคนแก้ก่อน) | `STALE_VERSION` |
 | 413 / 415 | ไฟล์ใหญ่เกิน · ชนิดไฟล์จริงไม่ตรง | `FILE_TOO_LARGE` · `UNSUPPORTED_FILE` |
@@ -104,10 +104,10 @@
 | Method | Path | ใคร | ทำอะไร · ผลลัพธ์ |
 |---|---|---|---|
 | GET | `/events/{eventId}/hall` | Attendee / Admin | `mapJson` + `boothSlots` + ผลงานที่วางแต่ละช่อง |
-| PATCH | `/events/{eventId}/hall` | Admin | เปลี่ยน preset (ก่อน LIVE) · ไม่พอวาง `409 HALL_NO_SLOT` |
+| PATCH | `/events/{eventId}/hall` | Admin | `{preset}` เปลี่ยน preset (ก่อน LIVE) · ไม่พอวาง `409 HALL_NO_SLOT` |
 | PUT | `/events/{eventId}/hall/placements` | Admin | สลับตำแหน่งบูธ `[{projectId, boothSlotId}]` ทั้งชุดใน transaction · หลังเปิดฮอลล์ `409` |
 | GET | `/events/{eventId}/projects` | Public | `?q=&categoryId=&cursor=` · ค้นชื่อ / สมาชิก / tag (full-text) · ไม่มีสถานะ Live (มาจาก realtime) |
-| POST | `/events/{eventId}/projects` | Admin · User (เมื่อเปิดรับผลงาน) | `{title, categoryId?, memberEmails[], summary?}` · วางช่องอัตโนมัติ + เชิญสมาชิก · ระหว่างงานวางในโซนตัวเองและ push `boothAdded` · `409 HALL_NO_SLOT` |
+| POST | `/events/{eventId}/projects` | Admin · User (เมื่อ `submissionsOpen`) | `{title, categoryId?, memberEmails[], summary?}` · User ส่งตอนปิดรับ `409 SUBMISSIONS_CLOSED` · วางช่องอัตโนมัติ + เชิญสมาชิก · ระหว่างงานวางในโซนตัวเองและ push `boothAdded` · `409 HALL_NO_SLOT` |
 | POST | `/events/{eventId}/project-imports` | Admin | multipart CSV/XLSX หรือ `{text}` (AI · Pro) · `?dryRun=true` คืนตารางตรวจ `200` · ยืนยัน `201` · `402` |
 | GET | `/projects/{projectId}` | Public | ข้อมูลบูธ + ไฟล์ (signed URL หมดอายุ) |
 | PATCH | `/projects/{projectId}` | Presenter* · Admin | แก้บูธ (ระหว่างงานได้ · broadcast + audit) · `If-Match` → `412` |
@@ -125,7 +125,7 @@
 | GET | `/events/{eventId}/forms/{kind}` | User | `kind` = `join` · `survey` |
 | PUT | `/events/{eventId}/forms/{kind}` | Admin | แก้คำถาม · ทุกคำถามต้องมี `purpose` (PDPA) |
 | POST | `/events/{eventId}/attendances` | User | ฟอร์มเข้างาน `{displayName, visitorType, consentMarketing, answers}` · snapshot ประเภท + จังหวัด · `201` · `403 DOMAIN_NOT_ALLOWED` (Visitor) · `403 BANNED` · ซ้ำ `409` |
-| POST | `/events/{eventId}/hall-tickets` | Attendee | ขอเข้าฮอลล์ → `{realtimeUrl, ticket, mediaUrl, mediaToken}` · `409 JOIN_FORM_REQUIRED` · `409 HALL_FULL` + `Retry-After` (Visitor เท่านั้น) · `403 BANNED` · งานยังไม่ LIVE/EXHIBITION `409` |
+| POST | `/events/{eventId}/hall-tickets` | Attendee | ขอเข้าฮอลล์ → `{realtimeUrl, ticket, mediaUrl, mediaToken}` · ผ่านด่านเข้าฮอลล์ที่นี่ที่เดียว · `409 JOIN_FORM_REQUIRED` · `409 HALL_FULL` + `Retry-After` (Visitor เท่านั้น) · `403 BANNED` · งานยังไม่ LIVE/EXHIBITION `409` |
 | POST | `/events/{eventId}/forms/survey/responses` | Attendee | ตอบ survey ครั้งเดียว · ซ้ำ `409` |
 
 ### 6. ในฮอลล์
@@ -141,7 +141,7 @@
 | POST | `/projects/{projectId}/feedbacks` | Attendee | `{text, isAnonymous}` · Live/Exhibition เท่านั้น `409` · module ปิด `403 MODULE_DISABLED` |
 | GET | `/projects/{projectId}/feedbacks` | Presenter* · Admin | anonymous → Presenter ไม่เห็นชื่อ · Admin เห็น |
 | PATCH | `/feedbacks/{feedbackId}` | Presenter* · Admin | `{status:"HIDDEN"}` (Presenter) · `{status:"REMOVED"}` (Admin) |
-| PUT · DELETE | `/projects/{projectId}/votes/me` | Attendee | โหวต / ถอน · `204` · ยังไม่แวะบูธ `409 NOT_VISITED` · งานจบ `409` |
+| PUT · DELETE | `/projects/{projectId}/votes/me` | Attendee | โหวต / ถอน · `204` · งานจบ `409` |
 | PUT · DELETE | `/projects/{projectId}/contact-requests/me` | Attendee | `{email, phone?, link?, message?}` · ถอน = ลบจริง |
 | GET | `/projects/{projectId}/contact-requests` | Presenter* | `Accept: text/csv` = export · บูธอื่น `403` |
 | POST | `/projects/{projectId}/ai-answers` | Attendee | `{question}` → `{answer, sources[]}` · AI ปิด `403 MODULE_DISABLED` · Free `402` · `429` · LLM ล่ม `503` |
@@ -167,14 +167,15 @@
 
 | Method | Path | ใคร | ทำอะไร · ผลลัพธ์ |
 |---|---|---|---|
-| GET | `/events/{eventId}/analytics/summary` | Admin | Interested → มาจริง (%) · มาโดยไม่กด Interested · peak · เวลาเฉลี่ย |
+| GET | `/events/{eventId}/analytics/summary` | Admin | Interested → มาจริง (%) · มาโดยไม่กด Interested · peak · เวลาเฉลี่ย · `Accept: application/pdf` = รายงานสรุปทั้งงาน |
 | GET | `/events/{eventId}/analytics/attendance` | Admin | `?interval=5m` กราฟคน online |
 | GET | `/events/{eventId}/analytics/booths` | Admin | ต่อบูธ: แวะ · เวลาเฉลี่ย · เดินผ่านไม่แวะ · ดูจอแชร์ · feedback · โหวต · คะแนน |
 | GET | `/events/{eventId}/analytics/heatmap` | Admin | `[{cellX, cellY, samples}]` |
 | GET | `/events/{eventId}/analytics/audience` | Admin | ประเภทผู้ชม · จังหวัด · ผล survey |
-| GET | `/events/{eventId}/analytics/export` | Admin | `Accept: text/csv` / `application/pdf` |
 | GET | `/projects/{projectId}/summary` | Presenter* | สรุปของผู้นำเสนอ: สถิติ · feedback · ติดต่อกลับ · คะแนน + comment (หลังประกาศ ไม่งั้นไม่มีช่องคะแนน) |
 | GET | `/projects/{projectId}/feedback-summary` | Presenter* | AI สรุป feedback (Pro) |
+
+- export: ทุก endpoint ใน `/analytics/*` รองรับ `Accept: text/csv` · `summary` รองรับ `application/pdf` ด้วย
 
 ### 9. Billing · Platform (Could)
 
@@ -190,7 +191,9 @@
 
 ## Realtime (Colyseus) — 1 room ต่อ 1 ฮอลล์
 
-- ต่อด้วย `ticket` จาก `POST /hall-tickets` → `onAuth` ตรวจ ticket + ban + role จาก DB · ทุก message ตรวจ role อีกรอบ (ทางที่ 2 จาก 3)
+- **ticket** = JWT อายุ 60 วินาที ที่ API ออกหลังผ่านด่านเข้าฮอลล์ (สถานะงาน · ฟอร์มเข้างาน · ban · ฮอลล์เต็ม) · claim: `sub` (userId) · `eventId` · `jti` · `exp` · เซ็นด้วยกุญแจของ API (ไม่ใช่ JWT ของ Better Auth)
+- `onAuth` ของ Colyseus: ตรวจลายเซ็น + `exp` · `eventId` ตรงกับ room · `jti` ใช้ได้ครั้งเดียว (จำไว้จนหมดอายุ) · โหลด role จาก DB · ไม่ตรวจด่านเข้าฮอลล์ซ้ำ
+- ทุก message ตรวจ role อีกรอบ (ทางที่ 2 จาก 3) · หลุดแล้วต่อใหม่ = ขอ ticket ใหม่
 - state ที่ sync: `players` (ชื่อ · ตำแหน่ง · badge จาก server) · `booths` (ผลงาน · ช่อง · `live` · จำนวนคน)
 
 | ทิศทาง | message | ใคร | หมายเหตุ |
