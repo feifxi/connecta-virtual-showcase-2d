@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "api:types": "openapi-typescript http://localhost:4000/api/v1/openapi.json -o src/lib/api/schema.d.ts"
+    "api:types": "npm run openapi -w @connecta/api && openapi-typescript ../api/openapi.json -o src/lib/api/schema.d.ts"
   },
   "dependencies": {
     "@colyseus/sdk": "0.18.8",

@@ -11,6 +11,7 @@ import {
   JudgeAssignmentsResponseDto,
   JudgeListDto,
   JudgingProgressDto,
+  RemindersDto,
   ResultsDto,
   RubricDto,
   RubricResponseDto,
@@ -114,7 +115,7 @@ export class JudgingController {
 
   @Post('events/:eventId/judging-reminders')
   @EventAccess('ADMIN')
-  @HttpCode(202)
+  @ZodResponse({ type: RemindersDto, status: 202 })
   remind(@Access() ctx: AccessCtx, @CurrentUser() user: AuthUser) {
     return this.judging.remind(ctx, user);
   }

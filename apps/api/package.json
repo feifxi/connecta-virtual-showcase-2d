@@ -8,7 +8,7 @@
     "start": "node dist/main.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "openapi": "node dist/openapi.js"
+    "openapi": "nest build && node dist/openapi.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",

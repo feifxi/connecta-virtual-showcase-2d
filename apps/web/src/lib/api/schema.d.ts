@@ -1354,6 +1354,10 @@ export interface components {
             /** Format: uuid */
             projectId?: string;
         };
+        InviteResultDto_Output: {
+            sent: boolean;
+            count: number;
+        };
         InviteStatusDto: {
             /** @constant */
             status: "REVOKED";
@@ -2095,6 +2099,9 @@ export interface components {
                 submitted: number;
             }[];
         };
+        RemindersDto_Output: {
+            reminded: number;
+        };
         ResultsDto_Output: {
             criteria: {
                 /** Format: uuid */
@@ -2285,6 +2292,9 @@ export interface components {
                 name: string;
                 excerpt: string;
             }[];
+        };
+        AiSummaryDto_Output: {
+            summary: string;
         };
         ImportPreviewDto_Output: {
             rows: {
@@ -2612,7 +2622,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["InviteResultDto_Output"];
+                };
             };
         };
     };
@@ -2659,7 +2671,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["InviteResultDto_Output"];
+                };
             };
         };
     };
@@ -4180,7 +4194,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RemindersDto_Output"];
+                };
             };
         };
     };
@@ -4478,7 +4494,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AiSummaryDto_Output"];
+                };
             };
         };
     };

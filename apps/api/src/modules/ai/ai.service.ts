@@ -92,7 +92,8 @@ export class AiService {
   async answer(ctx: AccessCtx, user: AuthUser, question: string) {
     await this.assertAllowed(ctx);
     const p = ctx.project!;
-    if (!p.aiEnabled) throw new AppError('MODULE_DISABLED', 'The team has not turned on the assistant for this booth');
+    // the team may try it before switching it on for visitors
+    if (!p.aiEnabled && !ctx.isPresenterOf && !ctx.isAdmin) throw new AppError('MODULE_DISABLED', 'The team has not turned on the assistant for this booth');
     const recent = await this.db.analyticsEvent.count({ where: { eventId: p.eventId, userId: user.id, type: 'ai_question', createdAt: { gt: new Date(Date.now() - 3_600_000) } } });
     if (recent >= QUESTIONS_PER_HOUR) throw new AppError('RATE_LIMITED');
 

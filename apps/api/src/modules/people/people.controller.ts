@@ -11,6 +11,7 @@ import {
   CreateInvitesDto,
   InviteDto,
   InviteLookupDto,
+  InviteResultDto,
   InviteStatusDto,
   MembersDto,
   ProjectInviteDto,
@@ -58,7 +59,7 @@ export class PeopleController {
 
   @Post('events/:eventId/invites')
   @EventAccess('ADMIN')
-  @HttpCode(202)
+  @ZodResponse({ type: InviteResultDto, status: 202 })
   createInvites(@Access() ctx: AccessCtx, @CurrentUser() user: AuthUser, @Body() body: CreateInvitesDto) {
     return this.invites.create(ctx, user, body.emails, body.roles, body.projectId);
   }
@@ -72,7 +73,7 @@ export class PeopleController {
 
   @Post('projects/:projectId/invites')
   @ProjectAccess('PRESENTER', 'ADMIN')
-  @HttpCode(202)
+  @ZodResponse({ type: InviteResultDto, status: 202 })
   inviteTeammates(@Access() ctx: AccessCtx, @CurrentUser() user: AuthUser, @Body() body: ProjectInviteDto) {
     return this.invites.createForProject(ctx, user, body.emails);
   }

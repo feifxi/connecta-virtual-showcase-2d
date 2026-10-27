@@ -98,4 +98,7 @@ export class AiAnswerDto extends createZodDto(s.aiAnswerSchema) {}
 export class ImportPreviewDto extends createZodDto(s.importPreviewSchema) {}
 export class PlatformEventDto extends createZodDto(s.platformEventSchema) {}
 export class PlatformHealthDto extends createZodDto(s.platformHealthSchema) {}
+export class AiSummaryDto extends createZodDto(s.aiSummarySchema) {}
+export class InviteResultDto extends createZodDto(s.inviteResultSchema) {}
+export class RemindersDto extends createZodDto(s.remindersSchema) {}
 export class SlugDto extends createZodDto(z.object({ id: z.uuid(), slug: z.string() })) {}

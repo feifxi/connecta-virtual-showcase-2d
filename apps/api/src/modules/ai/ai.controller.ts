@@ -5,7 +5,7 @@ import { Throttle } from '@nestjs/throttler';
 import { ZodResponse } from 'nestjs-zod';
 import { Access, EventAccess, ProjectAccess, type AccessCtx } from '../../common/auth/access.js';
 import { CurrentUser, Public, type AuthUser } from '../../common/auth/auth.guard.js';
-import { AiAnswerDto, AiQuestionDto, DryRunQuery, ImportPreviewDto } from '../../common/dto.js';
+import { AiAnswerDto, AiSummaryDto, AiQuestionDto, DryRunQuery, ImportPreviewDto } from '../../common/dto.js';
 import { toCsv } from '../engagement/engagement.service.js';
 import { AiService } from './ai.service.js';
 import { ImportService } from './import.service.js';
@@ -19,7 +19,7 @@ export class AiController {
   ) {}
 
   @Post('projects/:projectId/ai-answers')
-  @ProjectAccess('ATTENDEE', 'ADMIN')
+  @ProjectAccess('ATTENDEE', 'PRESENTER', 'ADMIN')
   @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @ZodResponse({ type: AiAnswerDto, status: 201 })
   answer(@Access() ctx: AccessCtx, @CurrentUser() user: AuthUser, @Body() body: AiQuestionDto) {
@@ -29,6 +29,7 @@ export class AiController {
   @Get('projects/:projectId/feedback-summary')
   @ProjectAccess('PRESENTER', 'ADMIN')
   @Throttle({ default: { ttl: 60_000, limit: 5 } })
+  @ZodResponse({ type: AiSummaryDto })
   feedbackSummary(@Access() ctx: AccessCtx) {
     return this.ai.summarizeFeedback(ctx);
   }

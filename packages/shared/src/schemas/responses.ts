@@ -358,3 +358,6 @@ export const platformHealthSchema = z.object({
   livekit: z.object({ ok: z.boolean(), rooms: z.number().int() }),
   db: z.object({ ok: z.boolean() }),
 });
+export const aiSummarySchema = z.object({ summary: z.string() });
+export const inviteResultSchema = z.object({ sent: z.boolean(), count: z.number().int() });
+export const remindersSchema = z.object({ reminded: z.number().int() });

@@ -18,11 +18,16 @@ async function bootstrap() {
   app.enableShutdownHooks();
   app.useBodyParser('json', { limit: '1mb' });
 
-  const doc = SwaggerModule.createDocument(app, new DocumentBuilder().setOpenAPIVersion('3.1.0').setTitle('Connecta API').setVersion('1').addBearerAuth().build());
-  SwaggerModule.setup('api/v1/docs', app, withZodSchemas(withOkResponses(cleanupOpenApiDoc(doc))), { jsonDocumentUrl: 'api/v1/openapi.json' });
+  SwaggerModule.setup('api/v1/docs', app, buildOpenApi(app), { jsonDocumentUrl: 'api/v1/openapi.json' });
 
   await app.listen(env.API_PORT);
   Logger.log(`api listening on :${env.API_PORT}`, 'Bootstrap');
+}
+
+/** The OpenAPI 3.1 document the web client types are generated from */
+export function buildOpenApi(app: NestExpressApplication) {
+  const doc = SwaggerModule.createDocument(app, new DocumentBuilder().setOpenAPIVersion('3.1.0').setTitle('Connecta API').setVersion('1').addBearerAuth().build());
+  return withZodSchemas(withOkResponses(cleanupOpenApiDoc(doc)));
 }
 
 /** Routes without an explicit status document their body as `default` · typed clients expect a 2xx key and every path param */
@@ -58,4 +63,4 @@ function withZodSchemas(doc: OpenAPIObject) {
   return doc;
 }
 
-void bootstrap();
+if (!process.env.OPENAPI_ONLY) void bootstrap();
