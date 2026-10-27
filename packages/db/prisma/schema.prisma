@@ -235,6 +235,8 @@ model Jwks {
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   publicKey  String    @map("public_key")
   privateKey String    @map("private_key")
+  alg        String?
+  crv        String?
   createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
   expiresAt  DateTime? @map("expires_at") @db.Timestamptz
 

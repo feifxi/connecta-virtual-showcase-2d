@@ -6,3 +6,4 @@ export * from './hall/map.js';
 export * from './hall/placement.js';
 export * from './hall/props.js';
 export * from './schemas/index.js';
+export * from './schemas/responses.js';

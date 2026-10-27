@@ -1,0 +1,111 @@
+@import 'tailwindcss';
+
+/* Theme from poc/ui-mockup-v2 (Claude Design) · tokens only, components style themselves with utilities */
+@theme {
+  --font-sans: var(--font-jakarta), var(--font-thai), ui-sans-serif, system-ui, sans-serif;
+
+  --color-ink: #0f1a3a;
+  --color-ink-2: #3d4766;
+  --color-muted: #5b6584;
+  --color-faint: #8a93ad;
+  --color-blue: #1d5cf5;
+  --color-blue-hover: #1446c4;
+  --color-blue-tint: #e8efff;
+  --color-blue-light: #7fa3ff;
+  --color-blue-wash: #f0f4ff;
+  --color-orange: #ff6a1a;
+  --color-orange-tint: #ffe6d8;
+  --color-live-ink: #b2430a;
+  --color-green: #1f7a52;
+  --color-green-tint: #e5f5ed;
+  --color-speaking: #33c27f;
+  --color-canvas: #f6f7fb;
+  --color-subtle: #eef1f8;
+  --color-border: #e3e7f2;
+  --color-input: #d6dcea;
+  --color-lavender: #e6dcfb;
+  --color-lavender-deep: #d8cbf6;
+  --color-lavender-ink: #5b3fb0;
+  --color-toolbar: #0f1a3a;
+  --color-toolbar-button: #26314f;
+  --color-toolbar-hover: #3b486c;
+  --color-red: #ba3b3b;
+  --color-red-tint: #fff0ed;
+  --color-yellow-tint: #fff4cf;
+  --color-hall: #d6d8df;
+
+  /* type scale · 12px is the floor for any text */
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.875rem;
+  --text-md--line-height: 1.6;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+
+  --radius-card: 18px;
+  --radius-control: 12px;
+  --shadow-card: 0 10px 30px rgb(15 26 58 / 0.12);
+  --shadow-float: 0 4px 16px rgb(15 26 58 / 0.08);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-page-in: page-in 0.36s var(--ease-out-soft);
+  --animate-panel-in: panel-in 0.25s var(--ease-out-soft);
+  --animate-panel-in-left: panel-in-left 0.25s var(--ease-out-soft);
+  --animate-pop-in: pop-in 0.25s var(--ease-out-soft);
+  --animate-breathe: breathe 2.5s ease-in-out infinite;
+  --animate-chat-fade: chat-fade 5s linear forwards;
+
+  @keyframes page-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes panel-in {
+    from { opacity: 0; transform: translateX(18px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes panel-in-left {
+    from { opacity: 0; transform: translateX(-18px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes pop-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes breathe {
+    0%, 100% { transform: translateY(0) scaleY(1); }
+    50% { transform: translateY(-1px) scaleY(1.015); }
+  }
+  @keyframes chat-fade {
+    0%, 75% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+}
+
+@layer base {
+  html { scroll-behavior: smooth; scroll-padding-top: 90px; }
+  body { @apply bg-canvas text-ink font-sans text-base leading-[1.6] antialiased; }
+  h1, h2, h3 { text-wrap: balance; @apply text-ink; }
+  h1 { @apply text-[2.75rem] leading-[1.14] tracking-[-0.025em] font-extrabold; }
+  h2 { @apply text-[1.65rem] leading-[1.3] tracking-[-0.02em] font-extrabold; }
+  h3 { @apply text-lg leading-[1.4] tracking-[-0.02em] font-bold; }
+  p { @apply text-muted; }
+  :focus-visible { outline: 3px solid var(--color-blue-light); outline-offset: 4px; }
+  ::selection { @apply bg-blue-tint text-blue; }
+  button:not(:disabled), [role='button']:not(:disabled) { cursor: pointer; }
+  kbd { @apply rounded border border-input bg-white px-1 font-bold; font: inherit; }
+}
+
+@utility container-page {
+  @apply mx-auto w-[calc(100%-32px)] max-w-[1240px] md:w-[calc(100%-96px)] 2xl:max-w-[1320px];
+}
+
+/* 4×4 TestUI sprite sheets · rows: down, up, left, right */
+@utility sprite-sheet {
+  background-repeat: no-repeat;
+  background-size: 400% 400%;
+  image-rendering: pixelated;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

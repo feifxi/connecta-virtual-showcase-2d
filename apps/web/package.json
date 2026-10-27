@@ -1,0 +1,53 @@
+{
+  "name": "@connecta/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "api:types": "openapi-typescript http://localhost:4000/api/v1/openapi.json -o src/lib/api/schema.d.ts"
+  },
+  "dependencies": {
+    "@colyseus/sdk": "0.18.8",
+    "@connecta/db": "*",
+    "@connecta/shared": "*",
+    "@hookform/resolvers": "^6.0.1",
+    "@tanstack/react-query": "^5.105.0",
+    "better-auth": "1.7.14",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "livekit-client": "2.22.4",
+    "lucide-react": "^1.62.0",
+    "next": "16.4.3",
+    "nodemailer": "^10.2.1",
+    "openapi-fetch": "^0.17.0",
+    "phaser": "4.2.1",
+    "radix-ui": "^1.8.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-hook-form": "^7.91.0",
+    "server-only": "^0.0.1",
+    "sonner": "^2.0.8",
+    "tailwind-merge": "^3.7.0",
+    "zod": "^4.6.7",
+    "zustand": "^5.0.16"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@testing-library/react": "^16",
+    "@types/node": "^24",
+    "@types/nodemailer": "^7",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.3",
+    "jsdom": "^27",
+    "openapi-typescript": "^7.13.0",
+    "tailwindcss": "^4.3.3",
+    "vitest": "^5.0.5"
+  }
+}

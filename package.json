@@ -32,6 +32,11 @@
   "allowScripts": {
     "prisma@7.10.1": true,
     "@prisma/engines@7.10.1": true,
-    "esbuild@0.28.2": true
+    "esbuild@0.28.2": true,
+    "fsevents@2.3.3": true,
+    "unrs-resolver@1.12.2": true,
+    "msgpackr-extract@3.0.4": true,
+    "@scarf/scarf": false,
+    "@swc/core@1.16.20": true
   }
 }

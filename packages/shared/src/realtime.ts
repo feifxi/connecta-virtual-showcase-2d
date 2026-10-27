@@ -83,6 +83,8 @@ export type HallSignal =
   | { type: 'muted'; userId: string; by: string }
   | { type: 'statusChanged'; status: string };
 export const hallChannel = (eventId: string) => `hall:${eventId}`;
+/** Redis hash userId → projectId of the booth they stand in (realtime writes, api reads for booth-scoped permissions) */
+export const hallBoothKey = (eventId: string) => `hall:${eventId}:booth`;
 
 /** Hall ticket JWT claims (signed by the api, verified by realtime) */
 export type HallTicketClaims = { sub: string; eventId: string; jti: string };
