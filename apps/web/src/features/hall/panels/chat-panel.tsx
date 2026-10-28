@@ -22,9 +22,9 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
   const myUserId = useHall((s) => s.myUserId);
   const [tab, setTab] = useState<'nearby' | 'all'>('nearby');
   const [draft, setDraft] = useState('');
-  const [, tick] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const t = setInterval(() => tick((n) => n + 1), 1000);
+    const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
   const report = useMutation({
@@ -32,7 +32,7 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
     onSuccess: () => toast.success('Reported. The organizers will take a look.'),
     onError: (e) => toastError(e),
   });
-  const shown = tab === 'nearby' ? nearby.filter((m) => m.expiresAt > Date.now()) : everyone;
+  const shown = tab === 'nearby' ? nearby.filter((m) => m.expiresAt > now) : everyone;
   const send = (e: React.FormEvent) => {
     e.preventDefault();
     const text = draft.trim();

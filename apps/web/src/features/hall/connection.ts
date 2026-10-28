@@ -103,8 +103,7 @@ export class HallConnection {
         this.unbind.push(cb.onChange(p, () => upsertPerson(key, p)));
       }),
       cb.onRemove('players', (_v, key) => {
-        const { [key]: _gone, ...rest } = useHall.getState().people;
-        s({ people: rest });
+        s({ people: Object.fromEntries(Object.entries(useHall.getState().people).filter(([k]) => k !== key)) });
       }),
       cb.onAdd('booths', (v, key) => {
         const b = v as BoothView & { sharing: boolean };
@@ -112,8 +111,7 @@ export class HallConnection {
         this.unbind.push(cb.onChange(b, () => upsertBooth(key, b)));
       }),
       cb.onRemove('booths', (_v, key) => {
-        const { [key]: _gone, ...rest } = useHall.getState().booths;
-        s({ booths: rest });
+        s({ booths: Object.fromEntries(Object.entries(useHall.getState().booths).filter(([k]) => k !== key)) });
       }),
       cb.listen('entryPaused', (v) => s({ entryPaused: !!v })),
     );

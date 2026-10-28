@@ -73,7 +73,8 @@ export class AnalyticsService {
     const last = Math.min(now, Math.max(e.endsAt.getTime(), ...sessions.map((s) => (s.leftAt?.getTime() ?? now))));
     const out: { at: string; online: number }[] = [];
     for (let t = Math.floor(first / step) * step; t <= last && out.length < 2000; t += step) {
-      out.push({ at: new Date(t).toISOString(), online: new Set(sessions.filter((s) => s.joinedAt.getTime() <= t && (s.leftAt?.getTime() ?? now) > t).map((s) => s.userId)).size });
+      // everyone present at any moment of [t, t + step) · instants alone would miss short visits
+      out.push({ at: new Date(t).toISOString(), online: new Set(sessions.filter((s) => s.joinedAt.getTime() < t + step && (s.leftAt?.getTime() ?? now) > t).map((s) => s.userId)).size });
     }
     return out;
   }

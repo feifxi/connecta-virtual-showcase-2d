@@ -54,6 +54,8 @@ export function HallView({ event, avatar }: { event: EventDetail; avatar: number
     const conn = new HallConnection(event.id);
     const media = new HallMedia(conn);
     useHall.setState({ phase: 'ticket', kicked: null, blockedBy: null, people: {}, booths: {}, nearby: [], everyone: [], mic: false, camera: false, sharing: false, banner: null, reconnecting: false });
+    // the effect owns these connections: they're created and disposed together with it
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPair({ conn, media });
     void (async () => {
       if (!(await conn.connect()) || !alive) return;
@@ -249,16 +251,16 @@ function Panels() {
   const booth = useHall((s) => (myBooth ? s.booths[myBooth] : null));
   const judge = useHall((s) => s.roles.includes('JUDGE'));
   const set = useHall((s) => s.set);
-  const [showBooth, setShowBooth] = useState(false);
+  const [detailsFor, setDetailsFor] = useState<string | null>(null);
+  const showBooth = detailsFor === myBooth;
   const closeSide = () => set({ side: null });
   const scoring = judge && event.modules.judging && event.status === 'LIVE' && !showBooth && myBooth && !event.myProjectIds.includes(myBooth);
-  useEffect(() => setShowBooth(false), [myBooth]);
   return (
     <>
       {myBooth &&
         (boothOpen ? (
           scoring ? (
-            <RubricPanel projectId={myBooth} onClose={() => set({ boothOpen: false })} onShowBooth={() => setShowBooth(true)} />
+            <RubricPanel projectId={myBooth} onClose={() => set({ boothOpen: false })} onShowBooth={() => setDetailsFor(myBooth)} />
           ) : (
             <BoothPanel projectId={myBooth} onClose={() => set({ boothOpen: false })} />
           )

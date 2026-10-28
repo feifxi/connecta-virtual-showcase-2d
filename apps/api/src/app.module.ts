@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import { AuthGuard } from './common/auth/auth.guard.js';
 import { CommonModule } from './common/common.module.js';
 import { ProblemFilter } from './common/problem.filter.js';
+import { UserThrottlerGuard } from './common/throttle.guard.js';
 import { InfraModule } from './infra/infra.module.js';
 import { AttendanceModule } from './modules/attendance/attendance.module.js';
 import { HallModule } from './modules/hall/hall.module.js';
@@ -25,8 +26,8 @@ import { PeopleModule } from './modules/people/people.module.js';
     InfraModule,
     CommonModule,
     ScheduleModule.forRoot(),
-    // per IP · stricter limits sit on single routes (invites, AI, reports)
-    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 300 }]),
+    // per user (per IP when anonymous) · stricter limits sit on single routes (invites, AI, reports)
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 600 }]),
     MeModule,
     PeopleModule,
     EventsModule,
@@ -41,8 +42,9 @@ import { PeopleModule } from './modules/people/people.module.js';
     PlatformModule,
   ],
   providers: [
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    // auth first, so the throttler can key on the user
     { provide: APP_GUARD, useClass: AuthGuard },
+    { provide: APP_GUARD, useClass: UserThrottlerGuard },
     { provide: APP_PIPE, useClass: ZodValidationPipe },
     { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
     { provide: APP_FILTER, useClass: ProblemFilter },

@@ -52,7 +52,7 @@ export const auth = betterAuth({
     cookieCache: { enabled: true, maxAge: 5 * 60 },
   },
   socialProviders,
-  rateLimit: { enabled: true, window: 60, max: 100, customRules: { '/sign-in/magic-link': { window: 60, max: 5 } } },
+  rateLimit: { enabled: true, window: 60, max: 100, customRules: { '/sign-in/magic-link': { window: 60, max: 5 }, '/token': { window: 60, max: 300 } } },
   databaseHooks: {
     user: {
       create: { before: async (user) => ({ data: { ...user, displayName: user.name || user.email.split('@')[0] } }) },

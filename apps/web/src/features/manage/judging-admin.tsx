@@ -1,7 +1,7 @@
 'use client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bell, Lock, Plus, Trash2, Trophy } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import type { EventDetail } from '@connecta/shared';
 import { BoothCode } from '@/components/brand/bits';
@@ -36,14 +36,14 @@ export function JudgingAdmin({ event }: { event: EventDetail }) {
 function RubricEditor({ eventId }: { eventId: string }) {
   const client = useQueryClient();
   const q = useQuery({ queryKey: qk.rubric(eventId), queryFn: async () => (await api.GET('/api/v1/events/{eventId}/rubric', { params: { path: { eventId } } })).data! });
-  const [rows, setRows] = useState<Row[]>([]);
-  useEffect(() => {
-    if (q.data) setRows(q.data.criteria.length ? q.data.criteria.map(({ id, name, description, maxScore, weight }) => ({ id, name, description, maxScore, weight })) : [{ name: '', description: '', maxScore: 10, weight: 25 }]);
-  }, [q.data]);
+  // edits live in a draft until saved; without one, show what the server has
+  const [draft, setRows] = useState<Row[] | null>(null);
+  const rows: Row[] = draft ?? (q.data?.criteria.length ? q.data.criteria.map(({ id, name, description, maxScore, weight }) => ({ id, name, description, maxScore, weight })) : [{ name: '', description: '', maxScore: 10, weight: 25 }]);
   const save = useMutation({
     mutationFn: () => api.PUT('/api/v1/events/{eventId}/rubric', { params: { path: { eventId } }, body: { criteria: rows.filter((r) => r.name.trim()) } }),
     onSuccess: () => {
       toast.success('Rubric saved');
+      setRows(null);
       client.invalidateQueries({ queryKey: qk.rubric(eventId) });
     },
     onError: (e) => toastError(e),
@@ -125,8 +125,8 @@ function Assignments({ eventId }: { eventId: string }) {
   const client = useQueryClient();
   const q = useQuery({ queryKey: qk.assignments(eventId), queryFn: async () => (await api.GET('/api/v1/events/{eventId}/judge-assignments', { params: { path: { eventId } } })).data! });
   const projects = useQuery({ queryKey: qk.projects(eventId), queryFn: async () => (await api.GET('/api/v1/events/{eventId}/projects', { params: { path: { eventId }, query: { limit: 200 } } })).data! });
-  const [pairs, setPairs] = useState<Set<string>>(new Set());
-  useEffect(() => q.data && setPairs(new Set(q.data.assignments.map((a) => `${a.judgeId}:${a.projectId}`))), [q.data]);
+  const [draft, setPairs] = useState<Set<string> | null>(null);
+  const pairs = draft ?? new Set((q.data?.assignments ?? []).map((a) => `${a.judgeId}:${a.projectId}`));
   const save = useMutation({
     mutationFn: (set: Set<string>) => api.PUT('/api/v1/events/{eventId}/judge-assignments', { params: { path: { eventId } }, body: { assignments: [...set].map((k) => ({ judgeId: k.split(':')[0]!, projectId: k.split(':')[1]! })) } }),
     onSuccess: () => {
