@@ -17,26 +17,33 @@ export const CurrentUser = createParamDecorator((_: unknown, ctx: ExecutionConte
 // Better Auth's JWT (EdDSA) checked against its JWKS · keys are cached and refetched on rotation
 const jwks = createRemoteJWKSet(new URL(jwksUrl), { cacheMaxAge: 10 * 60_000, cooldownDuration: 30_000 });
 
-export async function verifyUserToken(token: string): Promise<AuthUser | null> {
-  try {
-    const { payload } = await jwtVerify(token, jwks, { issuer: siteUrl, audience: 'connecta-api' });
-    if (!payload.sub) return null;
-    return { id: payload.sub, appRole: payload.appRole === 'PLATFORM_ADMIN' ? 'PLATFORM_ADMIN' : 'USER' };
-  } catch {
-    return null;
+/** Verifies the Bearer JWT · a provider so tests can swap in a fake */
+@Injectable()
+export class TokenVerifier {
+  async verify(token: string): Promise<AuthUser | null> {
+    try {
+      const { payload } = await jwtVerify(token, jwks, { issuer: siteUrl, audience: 'connecta-api' });
+      if (!payload.sub) return null;
+      return { id: payload.sub, appRole: payload.appRole === 'PLATFORM_ADMIN' ? 'PLATFORM_ADMIN' : 'USER' };
+    } catch {
+      return null;
+    }
   }
 }
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly tokens: TokenVerifier,
+  ) {}
 
   async canActivate(ctx: ExecutionContext) {
     const req = ctx.switchToHttp().getRequest<AuthedRequest>();
     const isPublic = this.reflector.getAllAndOverride<boolean>(PUBLIC, [ctx.getHandler(), ctx.getClass()]);
     const header = req.headers.authorization;
     const token = header?.startsWith('Bearer ') ? header.slice(7) : null;
-    req.user = token ? ((await verifyUserToken(token)) ?? undefined) : undefined;
+    req.user = token ? ((await this.tokens.verify(token)) ?? undefined) : undefined;
     if (!req.user && !isPublic) throw new AppError('UNAUTHENTICATED');
     return true;
   }

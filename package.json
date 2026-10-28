@@ -23,9 +23,11 @@
     "test": "npm run test --workspaces --if-present",
     "format": "prettier --write .",
     "db:generate": "npm run generate -w @connecta/db",
-    "build:packages": "npm run build -w @connecta/shared && npm run build -w @connecta/db"
+    "build:packages": "npm run build -w @connecta/shared && npm run build -w @connecta/db",
+    "e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "prettier": "^3",
     "typescript": "^5.9.3"
   },
