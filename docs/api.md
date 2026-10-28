@@ -41,7 +41,7 @@
 | 402 | เกิน limit ของ plan | `PLAN_LIMIT` (capacity · กรรมการคนที่ 6 · AI ในงาน Free) · ตั้งใจใช้ 402 แยกจาก 403: แก้ได้ด้วยการอัปเกรด ไม่ใช่ไม่มีสิทธิ์ |
 | 403 | login แล้วแต่ไม่มีสิทธิ์ | `FORBIDDEN_ROLE` · `BANNED` · `DOMAIN_NOT_ALLOWED` · `NOT_ASSIGNED` · `MODULE_DISABLED` |
 | 404 | ไม่พบ หรือมีอยู่แต่ผู้เรียกไม่ควรรู้ว่ามี (งาน Draft) | `NOT_FOUND` |
-| 409 | ขัดกับสถานะปัจจุบัน | `HALL_FULL` · `INVALID_STATUS_TRANSITION` · `LAST_ADMIN` · `RUBRIC_LOCKED` · `JUDGING_CLOSED` · `ALREADY_EXISTS` · `HALL_NO_SLOT` · `SUBMISSIONS_CLOSED` · `JOIN_FORM_REQUIRED` |
+| 409 | ขัดกับสถานะปัจจุบัน | `HALL_FULL` · `HALL_NOT_OPEN` · `ENTRY_PAUSED` · `CATEGORY_IN_USE` · `INVALID_STATUS_TRANSITION` · `LAST_ADMIN` · `RUBRIC_LOCKED` · `JUDGING_CLOSED` · `ALREADY_EXISTS` · `HALL_NO_SLOT` · `SUBMISSIONS_CLOSED` · `JOIN_FORM_REQUIRED` |
 | 410 | token ใช้ไม่ได้แล้ว | `INVITE_EXPIRED` · `INVITE_REVOKED` · `INVITE_USED` |
 | 412 | `If-Match` ไม่ตรง (มีคนแก้ก่อน) | `STALE_VERSION` |
 | 413 / 415 | ไฟล์ใหญ่เกิน · ชนิดไฟล์จริงไม่ตรง | `FILE_TOO_LARGE` · `UNSUPPORTED_FILE` |
@@ -61,7 +61,8 @@
 | PATCH | `/me` | User | แก้ profile / ทำ onboarding (ช่องบังคับครบ → ตั้ง `onboardedAt`) · `400` |
 | DELETE | `/me` | User | ลบบัญชี · `409 LAST_ADMIN` + รายชื่องานที่ยังเป็น Admin คนเดียว · `204` |
 | GET | `/me/events` | User | หน้า Home: งานของฉันพร้อม role (`?role=ADMIN\|PRESENTER\|JUDGE\|VISITOR`) |
-| GET | `/me/invites` | User | คำเชิญที่ยังไม่รับของอีเมลฉัน |
+| GET | `/me/invites` | User | คำเชิญที่ยังไม่รับของอีเมลฉัน (รวมอีเมลที่เคยยืนยันผ่านคำเชิญ) |
+| POST | `/me/invites/{inviteId}/acceptances` | User | รับคำเชิญจากหน้า Home (ไม่ต้องมี token) · อีเมลต้องเป็นของบัญชีนี้ |
 | GET | `/me/notifications` | User | `?unread=true` |
 | PATCH | `/me/notifications/{id}` | User | `{read:true}` |
 | GET | `/me/subscription` | User | plan ปัจจุบัน (Billing C) |
@@ -70,6 +71,7 @@
 
 | Method | Path | ใคร | ทำอะไร · ผลลัพธ์ |
 |---|---|---|---|
+| GET | `/slugs/{slug}` | Public | slug → `{id, slug}` · การมองเห็นเหมือนตัวงาน (Draft เห็นแค่ Admin) |
 | GET | `/events` | Public | Explore: งานที่ Published ขึ้นไป · `?q=&status=&slug=` · ป้าย `access` (`OPEN` / `DOMAIN`) |
 | POST | `/events` | User | สร้างงาน (Draft) + ฮอลล์จาก preset · คนสร้างเป็น Admin · `201` · `402 PLAN_LIMIT` (capacity) · `400` (`endsAt ≤ startsAt`) |
 | GET | `/events/{eventId}` | Public / Admin | Draft เห็นแค่ Admin (คนอื่น `404`) · มี `myRoles` · `interested` · `canJoin` + เหตุผล |
@@ -105,11 +107,15 @@
 |---|---|---|---|
 | GET | `/events/{eventId}/hall` | Attendee / Admin | `mapJson` + `boothSlots` + ผลงานที่วางแต่ละช่อง |
 | PATCH | `/events/{eventId}/hall` | Admin | `{preset}` เปลี่ยน preset (ก่อน LIVE) · ไม่พอวาง `409 HALL_NO_SLOT` |
+| POST | `/events/{eventId}/hall/arrangements` | Admin | จัดบูธใหม่ทั้งหมดอัตโนมัติ (1 block = 1 หมวด) · หลังเปิดฮอลล์ `409` |
 | PUT | `/events/{eventId}/hall/placements` | Admin | สลับตำแหน่งบูธ `[{projectId, boothSlotId}]` ทั้งชุดใน transaction · หลังเปิดฮอลล์ `409` |
 | GET | `/events/{eventId}/projects` | Public | `?q=&categoryId=&cursor=` · ค้นชื่อ / สมาชิก / tag (full-text) · ไม่มีสถานะ Live (มาจาก realtime) |
 | POST | `/events/{eventId}/projects` | Admin · User (เมื่อ `submissionsOpen`) | `{title, categoryId?, memberEmails[], summary?}` · User ส่งตอนปิดรับ `409 SUBMISSIONS_CLOSED` · วางช่องอัตโนมัติ + เชิญสมาชิก · ระหว่างงานวางในโซนตัวเองและ push `boothAdded` · `409 HALL_NO_SLOT` |
+| GET | `/project-import-template.csv` | Public | template สำหรับ import |
 | POST | `/events/{eventId}/project-imports` | Admin | multipart CSV/XLSX หรือ `{text}` (AI · Pro) · `?dryRun=true` คืนตารางตรวจ `200` · ยืนยัน `201` · `402` |
-| GET | `/projects/{projectId}` | Public | ข้อมูลบูธ + ไฟล์ (signed URL หมดอายุ) |
+| GET | `/projects/{projectId}` | Public | ข้อมูลบูธ + ไฟล์ (ลิงก์ที่ API เซ็น หมดอายุ 1 ชม.) · `ETag` |
+| GET | `/projects/{projectId}/engagement/me` | User | โหวตแล้วไหม · ขอให้ติดต่อแล้วไหม · ส่ง feedback กี่ครั้ง (แผงบูธ) |
+| GET | `/files?k&e&s` | Public (ลิงก์ที่เซ็นแล้ว) | stream ไฟล์จาก storage · ลิงก์หมด/ผิด `404` |
 | PATCH | `/projects/{projectId}` | Presenter* · Admin | แก้บูธ (ระหว่างงานได้ · broadcast + audit) · `If-Match` → `412` |
 | DELETE | `/projects/{projectId}` | Admin | |
 | GET | `/projects/{projectId}/members` | Public | ชื่อ · avatar · องค์กร |
@@ -137,13 +143,13 @@
 | PATCH | `/events/{eventId}/hall/settings` | Admin | สวิตช์ฉุกเฉิน `{entryPaused, muteAll}` |
 | POST | `/events/{eventId}/announcements` | Admin | ประกาศทั้งฮอลล์ผ่าน realtime: แถบบนจอทุกคน + อยู่ในประวัติแชท Everyone ช่วงงาน (memory · ไม่เก็บ DB) · `202` |
 | POST | `/events/{eventId}/reports` | Attendee | `{targetUserId, targetKind, targetRef?, snapshot?, reason}` · `429` |
-| GET · PATCH | `/events/{eventId}/reports` · `/reports/{reportId}` | Admin | queue · `{status}` |
+| GET · PATCH | `/events/{eventId}/reports` · `/events/{eventId}/reports/{reportId}` | Admin | queue · `{status}` |
 | POST | `/projects/{projectId}/feedbacks` | Attendee | `{text, isAnonymous}` · Live/Exhibition เท่านั้น `409` · module ปิด `403 MODULE_DISABLED` |
 | GET | `/projects/{projectId}/feedbacks` | Presenter* · Admin | anonymous → Presenter ไม่เห็นชื่อ · Admin เห็น |
 | PATCH | `/feedbacks/{feedbackId}` | Presenter* · Admin | `{status:"HIDDEN"}` (Presenter) · `{status:"REMOVED"}` (Admin) |
 | PUT · DELETE | `/projects/{projectId}/votes/me` | Attendee | โหวต / ถอน · `204` · งานจบ `409` |
 | PUT · DELETE | `/projects/{projectId}/contact-requests/me` | Attendee | `{email, phone?, link?, message?}` · ถอน = ลบจริง |
-| GET | `/projects/{projectId}/contact-requests` | Presenter* | `Accept: text/csv` = export · บูธอื่น `403` |
+| GET | `/projects/{projectId}/contact-requests` · `.csv` | Presenter* | รายชื่อ / export CSV · บูธอื่น `403` |
 | POST | `/projects/{projectId}/ai-answers` | Attendee | `{question}` → `{answer, sources[]}` · AI ปิด `403 MODULE_DISABLED` · Free `402` · `429` · LLM ล่ม `503` |
 
 ### 7. Judging
@@ -153,13 +159,13 @@
 | GET | `/events/{eventId}/rubric` | Admin · Judge | |
 | PUT | `/events/{eventId}/rubric` | Admin | `{criteria:[{name, description, maxScore, weight}]}` · หลังมีคะแนนแก้ได้แค่ `description` → `409 RUBRIC_LOCKED` |
 | GET · PUT | `/events/{eventId}/judge-assignments` | Admin | แทนทั้งชุด · ว่าง = กรรมการทุกคนตัดสินทุกผลงาน |
-| GET | `/events/{eventId}/score-sheets?judge=me` | Judge | รายการผลงานที่ได้รับมอบหมาย + สถานะ (ยังไม่ให้ · draft · ส่งแล้ว) |
+| GET | `/events/{eventId}/score-sheets/me` | Judge | รายการผลงานที่ได้รับมอบหมาย + สถานะ (ยังไม่ให้ · draft · ส่งแล้ว) |
 | GET · PUT | `/projects/{projectId}/score-sheets/me` | Judge* | autosave draft `{scores:[{criterionId, score}], comment}` · `ETag`/`If-Match` (2 แท็บ) · `403 NOT_ASSIGNED` · งานจบ `409 JUDGING_CLOSED` · เกิน `maxScore` `400` |
 | PATCH | `/projects/{projectId}/score-sheets/me` | Judge* | `{status:"SUBMITTED"}` · ไม่ครบ `422 SHEET_INCOMPLETE` |
 | PATCH | `/score-sheets/{sheetId}` | Admin | `{commentVisible:false}` ซ่อน comment ก่อนส่งถึงผู้นำเสนอ |
 | GET | `/events/{eventId}/judging-progress` | Admin | กรรมการคนไหนยังไม่ครบ · ผลงานที่คะแนนไม่ครบ |
 | POST | `/events/{eventId}/judging-reminders` | Admin | เตือนกรรมการที่ยังไม่ครบ · `202` |
-| GET | `/events/{eventId}/results` | Admin | รวมถ่วงน้ำหนัก · รายเกณฑ์ · รายกรรมการ · Audience award · `Accept: text/csv` |
+| GET | `/events/{eventId}/results` · `/results.csv` | Admin | รวมถ่วงน้ำหนัก · รายเกณฑ์ · รายกรรมการ · Audience award |
 | POST | `/events/{eventId}/awards` | Admin | ประกาศผล `{judgesTop:3, audienceTop:3}` → สร้าง `awards` + แจ้งผู้นำเสนอ · งานยังไม่จบ `409` |
 | GET | `/events/{eventId}/awards` | Public | ผู้ชนะ (หลังประกาศ) |
 
@@ -175,7 +181,7 @@
 | GET | `/projects/{projectId}/summary` | Presenter* | สรุปของผู้นำเสนอ: สถิติ · feedback · ติดต่อกลับ · คะแนน + comment (หลังประกาศ ไม่งั้นไม่มีช่องคะแนน) |
 | GET | `/projects/{projectId}/feedback-summary` | Presenter* | AI สรุป feedback (Pro) |
 
-- export: ทุก endpoint ใน `/analytics/*` รองรับ `Accept: text/csv` · `summary` รองรับ `application/pdf` ด้วย
+- export CSV: `/analytics/booths.csv` · `/analytics/attendance.csv` (UTF-8 BOM เปิดใน Excel ได้ · กัน formula injection) · รายงาน PDF ยังไม่ทำ
 
 ### 9. Billing · Platform (Could)
 
@@ -203,10 +209,14 @@
 | C → S | `chat:nearby {text}` · `chat:all {text}` | ทุกคน | ไม่เก็บ DB · rate limit |
 | C → S | `poster:view {fileId, page, zoom, x, y}` | Presenter* ในบูธตัวเอง | ส่งต่อเฉพาะคนในบูธ · คนอื่นส่ง → ทิ้ง + log |
 | C → S | `model:camera {orbit, target, fov}` | Presenter* | 3D viewer (C) |
-| C → S | `react {emoji}` | ทุกคน | C · ~3/วินาที |
+| C → S | `react {emoji}` | ทุกคน | ~3/วินาที |
+| C → S | `poster:open {projectId}` | ทุกคน | บันทึก analytics `poster_view` (ครั้งเดียวต่อคนต่อบูธ) |
+| C → S | `share {on}` | Presenter* ในบูธตัวเอง | ป้าย sharing ของบูธ · analytics `screen_share_start/end/view` |
+| C → S | `chat:history` | ทุกคน | ขอประวัติแท็บ Everyone หลังผูก handler แล้ว |
 | S → C | `boothAdded` · `boothUpdated` | — | หลัง REST เขียน DB แล้ว |
 | S → C | `roleChanged {roles}` | — | UI อัปเดตทันที · ถอด Presenter → ตัดจอแชร์ |
-| S → C | `announcement {text}` · `kicked {reason}` · `banned` | — | |
+| S → C | `announcement {text}` · `kicked {reason, banned}` · `muted {by}` · `eventEnded` | — | |
+| S → C | `correct {x, y}` · `chat` · `chatHistory` · `poster:view` · `react` | — | ตำแหน่งที่ server ไม่รับ · แชท · sync โปสเตอร์ |
 
 ## Media (LiveKit) — 1 room ต่อ 1 ฮอลล์
 

@@ -11,18 +11,18 @@
 | Map | **Tiled** → export JSON | template ฮอลล์ preset มี "ช่องบูธ" ให้ระบบเติมผลงานอัตโนมัติ · เก็บเป็น `map_json` + `booth_slots` เพื่อให้ map editor ในเว็บ (ภายหลัง) สร้างรูปแบบเดียวกันได้ |
 | Web | **Next.js (App Router)** | หน้า public (หน้างาน + รายการผลงาน) ได้ SEO/OG ใน codebase เดียว |
 | Realtime | **Colyseus** | room lifecycle · delta state sync · client SDK สำเร็จรูป · 1 room ต่อ 1 ฮอลล์ · `StateView` แยกข้อมูลตามโซน |
-| API | **NestJS** | โครงสร้างบังคับ เหมาะทีมหลายคน · guard เป็นที่ของ permission · แยก service จาก Colyseus |
+| API | **NestJS 11** | โครงสร้างบังคับ เหมาะทีมหลายคน · guard เป็นที่ของ permission · แยก service จาก Colyseus · ใช้ 11 เพราะ `nestjs-zod` ยังไม่รองรับ 12 |
 | Media | **LiveKit** (self-host) | SFU + TURN/TLS ในตัวเดียว · เปลี่ยนสิทธิ์ publish / mute ฝั่ง server ได้ (เสียงโซนบูธ · mute โดย Presenter) |
 | DB | **PostgreSQL + Prisma + pgvector** | ข้อมูลเชิง relation + vector สำหรับ RAG ในที่เดียว |
 | Cache | **Redis** | MVP ยังไม่ใช้จริง แต่วาง interface ไว้ |
-| Storage | **MinIO** (S3-compatible) | โปสเตอร์ · สไลด์ · โมเดล 3D · serve ด้วย signed URL |
+| Storage | **SeaweedFS** (S3-compatible) | โปสเตอร์ · สไลด์ · โมเดล 3D · MinIO เลิกออก Docker image แล้ว · โค้ดใช้ S3 API ย้ายไป S3 จริงได้ด้วยการแก้ค่า env · ไฟล์ส่งผ่าน API ด้วยลิงก์ที่ API เซ็นเอง (หมดอายุ 1 ชม.) เพราะ signed URL ของ S3 ผูก host + path ใช้ผ่าน proxy ของคณะที่มี path prefix ไม่ได้ |
 | Auth | **Better Auth** (self-host) · Microsoft + Google + magic link | บังคับ login ทุกคน ไม่มี guest · user/session อยู่ใน Postgres ของเราเอง · มี magic link · rate limit · account linking · JWT/JWKS ในตัว · Auth.js อยู่ในการดูแลของทีม Better Auth และทีมแนะนำให้โปรเจคใหม่ใช้ Better Auth |
-| AI | **LLM API + pgvector** | AI ผู้ช่วยตอบเรื่องผลงาน (RAG) · AI สรุป feedback |
+| AI | **Claude API** (`@anthropic-ai/sdk`) | AI ผู้ช่วยตอบเรื่องผลงาน (RAG) · AI สรุป feedback · AI import · โมเดลตั้งที่ env `LLM_MODEL` · retrieval ใช้ full-text ของ Postgres (Claude ไม่มี embedding API) · ช่อง `embedding` เผื่อไว้ใช้ pgvector ภายหลัง · ไม่ใช้ local LLM เพราะ VM ไม่มี GPU และ RAM ต้องแบ่งกับ LiveKit/Postgres |
 | 3D | **`<model-viewer>`** | ดูโมเดล `.glb` ในบูธ ไม่ต้องเขียน three.js เอง (Could) |
 | Poster | PDF → รูปตอนอัปโหลด (server) | ซูม/ชี้ sync ผ่าน Colyseus |
 | Infra | **Docker Compose + nginx** บน VM ของมหาวิทยาลัย | ฟรี · ย้ายขึ้น cloud ได้โดยไม่ต้องแก้โค้ด · nginx เพราะทีมมีประสบการณ์ |
 
-**เวอร์ชัน** (pin ตาม POC ที่ทดสอบผ่าน · อัปเกรดต้องอ่าน changelog ก่อน): Next.js 16.4 · Phaser 4.2.1 · Colyseus 0.18 (`colyseus` · `@colyseus/sdk` · `@colyseus/schema` 5) · LiveKit server 1.13.9 · `livekit-client` 2.22 · `livekit-server-sdk` 2.19 · Better Auth pin ตอนติดตั้ง
+**เวอร์ชัน** (อัปเกรดต้องอ่าน changelog ก่อน): Node 24 · TypeScript 5.9 · Next.js 16.4 · React 19.3 · Phaser 4.2.1 · Colyseus 0.18 (`colyseus` · `@colyseus/sdk` · `@colyseus/schema` 5) · LiveKit server 1.13.9 · `livekit-client` 2.22 · `livekit-server-sdk` 2.19 · Better Auth 1.7.14 · NestJS 11.2 · Prisma 7.10 (`@prisma/adapter-pg`) · Zod 4 · Tailwind 4.3 · TanStack Query 5 · Zustand 5 · npm workspaces
 
 **ขนาดงานเป้าหมาย**: 150 คนพร้อมกันต่อ 1 ฮอลล์ (ประมาณจาก D-Day 600+ คนทั้งวัน · 39 ผลงาน) · เพดาน 300 คน/ฮอลล์ · capacity และสเปก VM อยู่ใน `poc/README.md`
 
@@ -30,7 +30,7 @@
 - Styling: **Tailwind v4** · token สี/ฟอนต์/ขนาดตัวอักษรจาก theme `ui-mockup-v2` อยู่ใน `@theme` · ไม่ใช้ inline style และ CSS ไฟล์ใหญ่ไฟล์เดียว
 - UI พื้นฐาน: **shadcn/ui** แต่งเป็นหน้าตา v2 (Dialog · DropdownMenu · Popover · Tabs · Tooltip) + **sonner** (toast) · ได้ focus trap · Esc · คีย์บอร์ดครบ · icon ใช้ **lucide-react**
 - State: **Zustand** (`hallStore` สถานะในฮอลล์ · Phaser ส่ง event เข้า store) + **TanStack Query** (ข้อมูลจาก REST · cache · loading/error)
-- Type ของ API: NestJS สร้าง OpenAPI → **openapi-typescript + openapi-fetch** · type ที่ใช้ร่วมอื่นๆ อยู่ใน `packages/`
+- Type ของ API: zod schema ชุดเดียวใน `packages/shared` ใช้ตรวจ request ใน API · ฟอร์มในเว็บ · สร้าง OpenAPI 3.1 (`npm run api:types -w @connecta/web`) → **openapi-typescript + openapi-fetch** · logic ฮอลล์ที่ client กับ realtime ต้องตรงกัน (แมป · การชน · การวางบูธ) อยู่ใน `packages/shared` เช่นกัน
 - Form: **React Hook Form + Zod** (สร้างงาน · แก้บูธ · rubric)
 - โครง code: แยกตาม feature เช่น `features/hall/` → `HallToolbar` · `BoothPanel` · `ChatPanel` · `PeoplePanel` · ไม่รวมไว้ในไฟล์เดียว
 - Test: **Vitest + Testing Library** (unit) · **Playwright** (E2E) · Prettier + ESLint (ต้องผ่าน `react-hooks`)
@@ -46,7 +46,7 @@
 - Phaser ต้องโหลดฝั่ง client เท่านั้น (`next/dynamic` + `ssr: false`) · ตอน unmount ต้อง `game.destroy(true)`
 
 **3D viewer (Could)** · `<model-viewer>` ของ Google · Apache 2.0 · ยังออก release ต่อเนื่อง (v4.4.0 ต.ค. 2026) · camera-orbit = theta/phi/radius
-1. รับ `.glb` / `.gltf` ≤20 MB · ตรวจ MIME/magic bytes ที่ server · เก็บ MinIO · ไฟล์ CAD/STL/OBJ ผู้นำเสนอแปลงเอง (Blender)
+1. รับ `.glb` / `.gltf` ≤20 MB · ตรวจ MIME/magic bytes ที่ server · เก็บ object storage · ไฟล์ CAD/STL/OBJ ผู้นำเสนอแปลงเอง (Blender)
 2. บีบอัดด้วย `gltf-transform` (Draco/Meshopt) ตอนอัปโหลดถ้าจำเป็น
 3. `<model-viewer src camera-controls>` ในแผงบูธ · โหลด lazy ตอนเปิดแผง
 4. Sync: ผู้นำเสนอฟัง `camera-change` → ส่ง `getCameraOrbit()` + `getCameraTarget()` + `getFieldOfView()` ผ่าน Colyseus (throttle ~10/วินาที · เฉพาะคนในบูธ) → ผู้ชมตั้ง `cameraOrbit` / `cameraTarget` · กด "ดูเอง" เพื่อหลุด sync
@@ -63,8 +63,8 @@ Browser (Next.js + Phaser 4)
  └─ UDP 50000-60000 ─────────────→ livekit    (media ตรง ไม่ผ่าน nginx)
     (fallback: TURN over TLS 443)
 
-api      → postgres :5432 · redis :6379 · livekit :7880 (ออก token / เปลี่ยนสิทธิ์) · minio :9000 · LLM API
-realtime → postgres :5432 · redis :6379 · api (ตรวจสิทธิ์ · เขียน analytics event)
+api      → postgres :5432 · redis :6379 (publish สัญญาณถึงฮอลล์) · livekit :7880 (ออก token / mute) · storage :8333 · LLM API
+realtime → postgres :5432 (role · บูธ · analytics) · redis :6379 (subscribe สัญญาณจาก api · บันทึกว่าใครยืนบูธไหน) · livekit (เปิด/ปิดสิทธิ์กล้อง/จอเมื่อเข้า/ออกบูธตัวเอง)
 ```
 
 ⭐ **media เป็น UDP ผ่าน reverse proxy ไม่ได้ → browser ต้องต่อ LiveKit ตรง** ข้อนี้กำหนดการเลือก infra ทั้งหมด
@@ -77,7 +77,7 @@ realtime → postgres :5432 · redis :6379 · api (ตรวจสิทธิ�
 | api (NestJS) | 4000 | `PORT` |
 | realtime (Colyseus) | 2567 | `PORT` |
 | livekit | 7880 signaling · 7881 TCP · UDP 50000-60000 media | `livekit.yaml` |
-| postgres · redis · minio | 5432 · 6379 · 9000 | — |
+| postgres · redis · storage (SeaweedFS) | 5432 · 6379 · 8333 | — |
 
 - **ทุก service อ่าน port จาก env `PORT`** ไม่ hardcode · ค่าในตารางเป็นค่าเริ่มต้นใน `.env.example`
 - **production (docker-compose)**: publish ออก host เฉพาะ nginx (80 · 443) และ media ของ LiveKit (7881 TCP · UDP 50000-60000) · service อื่นไม่ publish · nginx เรียกด้วยชื่อ service เช่น `http://api:4000` · ⚠️ postgres · redis · minio ห้ามเปิดออกนอก
@@ -112,6 +112,8 @@ realtime → postgres :5432 · redis :6379 · api (ตรวจสิทธิ�
 - ⚠️ ด้วยค่าเริ่มต้นนี้ **LiveKit บน VM ใช้จากภายนอกไม่ได้** (media ต้องต่อตรงด้วย UDP/TCP ผ่าน HTTP reverse proxy ไม่ได้) · **พัฒนาตาม architecture เดิมไปก่อน** (LiveKit self-host ใช้โค้ดเดียวกับ LiveKit Cloud) · ถ้าขอ public IP + พอร์ต media ไม่ได้ → ใช้แผนสำรอง: LiveKit Cloud หรือ VPS (เปลี่ยนแค่ URL + key)
 - web อยู่ใต้ path `/capstone26/CP26SSI3` → Next.js `basePath` · cookie path · OAuth redirect URI ต้องตั้งตาม path · Colyseus ต้องผ่าน WebSocket ของ proxy (ยังไม่รู้ว่ารองรับ)
 - สเปก VM · รายการที่ต้องขอจาก IT · fallback ทั้งหมด → `poc/README.md`
+- **ชุด deploy**: `Dockerfile` (target `web` · `api` · `realtime` · `migrate`) + `infra/docker-compose.yml` + `infra/nginx/default.conf.template` (route `${BASE_PATH}/api/v1` → api · `${BASE_PATH}/realtime` → realtime พร้อม WebSocket · ที่เหลือ → web) · env จาก `infra/.env.prod.example` · media ใช้ LiveKit Cloud เป็นค่าเริ่มต้น · self-host ได้ด้วย profile `selfhost-media` เมื่อได้ public IP
+- Next.js ส่ง URL ที่ตัด `basePath` ออกให้ route handler → route ของ Better Auth ใส่ `BASE_PATH` กลับก่อนส่งต่อ
 
 ## Spike
 

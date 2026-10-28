@@ -89,7 +89,7 @@ Main repo of the capstone project · Connecta — an online platform for present
 
 ## Next up
 
-1. Exam 3 Release 1 (30 Nov): implement in `apps/` + deploy on a server · scope in `docs/features.md` → Release plan · UI uses `poc/ui-mockup-v2/` as the main theme
+1. Exam 3 (30 Nov): every feature is implemented on branch `feat/implementation` (built in one go, not by Release plan) · still to do: deploy on the VM (LiveKit Cloud or a VM with a public IP) · S7 NAT/TURN from real networks · Billing (Stripe test mode) not built
 2. Team writes the one-liner · pain · problem statement themselves, replacing the draft in `docs/connecta.md`
 3. Survey done (users confirm time/travel is the main pain) · still to do: interview D-Day organizers / course instructors · business feasibility needs data from real target users (not the team)
 4. UI mockups v1 + v2 match `docs/features.md` (page list in `poc/README.md`) · pages not built yet: Profile · Billing · Platform Console · Presenter summary · project submission form

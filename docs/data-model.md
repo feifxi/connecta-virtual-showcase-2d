@@ -93,7 +93,7 @@
 | created_by | uuid FK users | คนสร้างงาน (ใช้หา plan ตอนสร้าง) · **ไม่ใช่ตัวกำหนดสิทธิ์** — สิทธิ์ Admin อยู่ใน `event_members` |
 | slug | text UK | URL หน้างาน |
 | title · description | text | |
-| cover_key | text? | object key ใน MinIO |
+| cover_key | text? | object key ใน storage |
 | agenda | jsonb | `[{time, title}]` แสดงให้ผู้ชมรู้ · ไม่ล็อกอะไร |
 | modules | jsonb | `{judging, popular_vote, feedback, model3d, ai}` → bool |
 | status | `event_status` | `DRAFT → PUBLISHED → LIVE → EXHIBITION → ARCHIVED` |
@@ -107,6 +107,7 @@
 | allowed_domain | text? | เช่น `kmutt.ac.th` · ใช้กับ Visitor เท่านั้น |
 | booth_deadline | timestamptz? | เตือนเท่านั้น ไม่ล็อก |
 | submissions_open | bool | default false · true = User ส่งผลงานผ่านฟอร์มส่งผลงานได้ |
+| entry_paused | bool | สวิตช์ฉุกเฉินปิดรับคนเข้าใหม่ · ด่านเข้าฮอลล์อ่านค่านี้ |
 | suspended_at | timestamptz? | Platform Admin ระงับงาน |
 | created_at · updated_at | timestamptz | |
 - index: (status, starts_at) สำหรับหน้า Explore · created_by
@@ -185,6 +186,7 @@
 | video_url | text? | YouTube / Vimeo เท่านั้น (ไม่โฮสต์เอง) |
 | links | jsonb | `[{label, url}]` |
 | ai_enabled | bool | ผู้นำเสนอเปิด AI ของบูธ (ต้องเปิด module ระดับงานด้วย) |
+| version | int | เพิ่มทุกครั้งที่แก้ · ใช้เป็น `ETag` / `If-Match` |
 | created_at · updated_at | timestamptz | |
 - index: (event_id, category_id) · GIN full-text บน title + summary + tags สำหรับค้นหา
 - UK (id, event_id) ให้ตารางลูกอ้างด้วย composite FK
@@ -197,7 +199,7 @@
 | id | uuid PK | |
 | project_id | uuid FK | |
 | kind | `file_kind` | `POSTER` · `SLIDES` · `DOC` (ให้ AI อ่าน) · `MODEL_3D` |
-| object_key | text | MinIO |
+| object_key | text | storage |
 | mime | text | **ตรวจจาก magic bytes ที่ server** ไม่เชื่อนามสกุล |
 | size_bytes | bigint | CHECK ≤ limit ต่อชนิด |
 | page_count | int? | โปสเตอร์/สไลด์ที่แปลงเป็นรูปแล้ว |
@@ -212,7 +214,7 @@
 | project_id | uuid FK | |
 | file_id | uuid FK | ลบไฟล์ → ลบ chunk |
 | content | text | |
-| embedding | vector(n) | n ตาม embedding model ที่เลือก · index HNSW (cosine) |
+| embedding | vector(1024)? | เผื่อไว้ · ตอนนี้ retrieval ใช้ full-text (`to_tsvector('simple', content)`) ยังไม่มี index HNSW |
 
 ### 4. เข้างาน · ในงาน
 
@@ -290,6 +292,7 @@
 | status | `sheet_status` | `DRAFT` · `SUBMITTED` |
 | comment | text? | |
 | comment_visible | bool | ผู้จัดซ่อนก่อนส่งให้ผู้นำเสนอได้ |
+| version | int | `ETag` / `If-Match` (กรรมการเปิด 2 แท็บ) |
 | submitted_at? · updated_at | timestamptz | `submitted_at` null = ยัง DRAFT |
 - **ตอนจบงาน**: DRAFT ที่ครบทุกเกณฑ์ → SUBMITTED อัตโนมัติ · ไม่ครบ = ไม่นับ
 
@@ -378,12 +381,12 @@ stateDiagram-v2
 
 - `players`: sessionId → { userId, name, x, y, badges[] } · badge ออกจาก server จาก `event_members`
 - `booths`: slotId → { projectId, title, zone, live, count } · โหลดจาก `projects` + `booth_slots` ตอนเปิด room · บูธเพิ่มระหว่างงาน → เขียน DB ก่อนแล้วค่อย patch state
-- `settings`: { entryPaused } · สวิตช์ฉุกเฉินปิดรับคนเข้าใหม่ (mute ทั้งงานเป็นคำสั่งครั้งเดียวผ่าน LiveKit ไม่ใช่ state)
+- `entryPaused` · สวิตช์ฉุกเฉินปิดรับคนเข้าใหม่ (เก็บใน `events.entry_paused` · mute ทั้งงานเป็นคำสั่งครั้งเดียวผ่าน LiveKit ไม่ใช่ state)
 - `chatAll`: ประวัติแท็บ Everyone + Announcement ตลอดช่วงงาน · ล้างเมื่องานจบ · Nearby chat ไม่มีประวัติ
 - room ว่าง → ถูกทิ้ง (`autoDispose`) · เปิดใหม่โหลดจาก DB · `entryPaused` · `chatAll` หายไปด้วย
-- Redis: ยังไม่ใช้ใน MVP (วาง interface ไว้สำหรับหลาย process)
+- Redis: api publish สัญญาณถึงฮอลล์ (`hall:{eventId}` · roleChanged · boothsChanged · kick · announcement · settings · muted · statusChanged) · hash `hall:{eventId}:booth` = ใครยืนบูธไหน (api ใช้ตรวจสิทธิ์ mute ของ Presenter)
 
-## ไฟล์ (MinIO)
+## ไฟล์ (object storage · SeaweedFS ใน dev/VM)
 
 ```
 events/{eventId}/cover.{ext}
@@ -391,11 +394,11 @@ events/{eventId}/projects/{projectId}/cover.{ext}
 events/{eventId}/projects/{projectId}/files/{fileId}/original.{ext}
 events/{eventId}/projects/{projectId}/files/{fileId}/pages/{n}.webp   ← โปสเตอร์/สไลด์ที่แปลงแล้ว
 ```
-- bucket private · serve ผ่าน signed URL ที่หมดอายุ · ตรวจสิทธิ์ก่อนออก URL
+- bucket private · ไม่เปิด storage ออกนอก · API ออกลิงก์ `GET /api/v1/files?k&e&s` ที่เซ็นด้วย HMAC หมดอายุ 1 ชม. แล้ว stream ไฟล์ให้ · ตรวจสิทธิ์ก่อนออกลิงก์ · DOC (ไฟล์ให้ AI) ไม่ส่งลิงก์ให้ผู้ชม
 
 ## Lifecycle และ PDPA
 
-- **ลบงาน** (Admin) → ลบทุกแถวที่มี `event_id` + โฟลเดอร์ `events/{eventId}/` ใน MinIO
+- **ลบงาน** (Admin) → ลบทุกแถวที่มี `event_id` + โฟลเดอร์ `events/{eventId}/` ใน storage
 - **ลบบัญชี** → ถ้ายังเป็น ADMIN คนเดียวของงานไหน ปฏิเสธพร้อมบอกชื่องาน · ผ่านแล้ว `users.deleted_at` · ล้าง name · email · organization · position · ลบ sessions/accounts · แถวที่อ้าง user ยังอยู่แต่แสดงเป็น "ผู้ใช้ที่ลบแล้ว" (คะแนน · feedback ของงานเก่าไม่หาย)
 - **ถอน** vote / contact request = ลบแถวจริง
 - `event_attendees.consent_marketing` = false → ผู้จัด export อีเมลคนนั้นไม่ได้
