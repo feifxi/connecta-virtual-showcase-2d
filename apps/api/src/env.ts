@@ -18,8 +18,6 @@ const schema = z.object({
   LIVEKIT_API_KEY: z.string().min(1),
   LIVEKIT_API_SECRET: z.string().min(1),
   S3_ENDPOINT: z.url(),
-  /** endpoint browsers use for signed URLs · defaults to S3_ENDPOINT */
-  S3_PUBLIC_ENDPOINT: z.url().optional(),
   S3_REGION: z.string().default('us-east-1'),
   S3_ACCESS_KEY: z.string().min(1),
   S3_SECRET_KEY: z.string().min(1),

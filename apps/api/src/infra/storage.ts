@@ -1,17 +1,21 @@
 import { CreateBucketCommand, DeleteObjectsCommand, GetObjectCommand, HeadBucketCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { createHmac, timingSafeEqual } from 'node:crypto';
+import type { Readable } from 'node:stream';
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
-import { env } from '../env.js';
+import { env, siteUrl } from '../env.js';
 
 const SIGNED_URL_TTL_S = 60 * 60;
 
-/** Private bucket · files are served only through signed URLs that expire (docs/data-model.md → ไฟล์) */
+/**
+ * Private bucket · files are served only through signed URLs that expire (docs/data-model.md → ไฟล์)
+ * The links point at the api (GET /files), which checks the signature and streams the object:
+ * storage is never exposed, and the URL survives the faculty proxy's path prefix (S3 presigned URLs sign host + path)
+ */
 @Injectable()
 export class Storage implements OnModuleInit {
   private readonly log = new Logger(Storage.name);
   private readonly s3 = new S3Client(this.config(env.S3_ENDPOINT));
-  // signing doesn't call the network, so a client pointed at the public endpoint produces browser-usable URLs
-  private readonly signer = new S3Client(this.config(env.S3_PUBLIC_ENDPOINT ?? env.S3_ENDPOINT));
+  private readonly key = createHmac('sha256', env.HALL_TICKET_SECRET).update('file-links').digest();
 
   private config(endpoint: string) {
     return { endpoint, region: env.S3_REGION, forcePathStyle: true, credentials: { accessKeyId: env.S3_ACCESS_KEY, secretAccessKey: env.S3_SECRET_KEY } };
@@ -34,12 +38,27 @@ export class Storage implements OnModuleInit {
     return Buffer.from(await res.Body!.transformToByteArray());
   }
 
-  signedUrl(key: string, filename?: string) {
-    return getSignedUrl(
-      this.signer,
-      new GetObjectCommand({ Bucket: env.S3_BUCKET, Key: key, ...(filename && { ResponseContentDisposition: `inline; filename="${filename.replace(/"/g, '')}"` }) }),
-      { expiresIn: SIGNED_URL_TTL_S },
-    );
+  /** Absolute link valid for an hour */
+  async signedUrl(key: string, filename?: string) {
+    const exp = Math.floor(Date.now() / 1000) + SIGNED_URL_TTL_S;
+    const q = new URLSearchParams({ k: key, e: String(exp), s: this.sign(key, exp), ...(filename && { n: filename }) });
+    return `${siteUrl}/api/v1/files?${q}`;
+  }
+
+  private sign(key: string, exp: number) {
+    return createHmac('sha256', this.key).update(`${key}\n${exp}`).digest('base64url');
+  }
+
+  verify(key: string, exp: number, sig: string) {
+    if (!Number.isFinite(exp) || exp < Date.now() / 1000) return false;
+    const a = Buffer.from(this.sign(key, exp));
+    const b = Buffer.from(sig);
+    return a.length === b.length && timingSafeEqual(a, b);
+  }
+
+  async stream(key: string) {
+    const res = await this.s3.send(new GetObjectCommand({ Bucket: env.S3_BUCKET, Key: key }));
+    return { body: res.Body as Readable, type: res.ContentType ?? 'application/octet-stream', length: res.ContentLength };
   }
 
   async deletePrefix(prefix: string) {

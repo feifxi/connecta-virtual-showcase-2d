@@ -10,3 +10,5 @@ coverage/
 .DS_Store
 packages/db/src/generated/
 openapi.json
+infra/.env.prod
+infra/seaweedfs/s3.prod.json

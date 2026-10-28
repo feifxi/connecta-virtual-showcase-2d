@@ -1,0 +1,14 @@
+# Self-hosted LiveKit (profile selfhost-media) · needs a public IP: browsers connect to media directly (UDP can't go through nginx)
+port: 7880
+rtc:
+  tcp_port: 7881
+  port_range_start: 50000
+  port_range_end: 60000
+  use_external_ip: true
+# TURN over TLS on 443 for networks that only allow 443 (docs/technical.md) · needs a domain + certificate
+# turn:
+#   enabled: true
+#   domain: turn.example.com
+#   tls_port: 443
+#   cert_file: /certs/turn.crt
+#   key_file: /certs/turn.key
