@@ -38,15 +38,16 @@ export const modulesSchema = z.object({
   ai: z.boolean(),
 });
 
+// no defaults here: a PATCH must leave fields it doesn't send untouched
 const eventFields = {
   title: required(120),
-  description: text(4000).default(''),
+  description: text(4000),
   startsAt: z.iso.datetime({ offset: true }),
   endsAt: z.iso.datetime({ offset: true }),
-  hallOpenMode: z.enum(['SCHEDULE', 'MANUAL']).default('SCHEDULE'),
+  hallOpenMode: z.enum(['SCHEDULE', 'MANUAL']),
   capacity: z.number().int().min(2).max(10_000),
   allowedDomain: domain.nullable().optional(),
-  agenda: z.array(agendaItem).max(40).default([]),
+  agenda: z.array(agendaItem).max(40),
   modules: modulesSchema.partial().optional(),
   boothDeadline: z.iso.datetime({ offset: true }).nullable().optional(),
 };
@@ -54,6 +55,9 @@ const eventFields = {
 export const createEventSchema = z
   .object({
     ...eventFields,
+    description: eventFields.description.default(''),
+    hallOpenMode: eventFields.hallOpenMode.default('SCHEDULE'),
+    agenda: eventFields.agenda.default([]),
     preset: z.enum(HALL_PRESETS),
     categories: z.array(z.object({ name: required(40), color: z.enum(ZONE_COLORS) })).max(12).default([]),
   })

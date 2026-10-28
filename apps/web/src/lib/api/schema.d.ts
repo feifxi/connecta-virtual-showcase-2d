@@ -1539,21 +1539,16 @@ export interface components {
         };
         UpdateEventDto: {
             title?: string;
-            /** @default  */
-            description: string;
+            description?: string;
             /** Format: date-time */
             startsAt?: string;
             /** Format: date-time */
             endsAt?: string;
-            /**
-             * @default SCHEDULE
-             * @enum {string}
-             */
-            hallOpenMode: "SCHEDULE" | "MANUAL";
+            /** @enum {string} */
+            hallOpenMode?: "SCHEDULE" | "MANUAL";
             capacity?: number;
             allowedDomain?: string | null;
-            /** @default [] */
-            agenda: {
+            agenda?: {
                 time: string;
                 title: string;
             }[];
