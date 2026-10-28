@@ -36,7 +36,7 @@ const FONT = "'Plus Jakarta Sans', system-ui, sans-serif";
 const BADGE: Record<string, string> = { ADMIN: 'Admin', PRESENTER: 'Presenter', JUDGE: 'Judge' };
 
 type Snapshot = { t: number; x: number; y: number };
-type Remote = { sprite: Phaser.GameObjects.Sprite; label: Phaser.GameObjects.Text; ring: Phaser.GameObjects.Ellipse; snaps: Snapshot[]; avatar: number; dir: Dir; userId: string };
+type Remote = { sprite: Phaser.GameObjects.Sprite; label: Phaser.GameObjects.Text; name: string; ring: Phaser.GameObjects.Ellipse; snaps: Snapshot[]; avatar: number; dir: Dir; userId: string };
 type Bubble = { text: Phaser.GameObjects.Text; lift: number };
 
 export type HallSceneData = { conn: HallConnection; mapJson: Record<string, unknown>; title: string };
@@ -65,6 +65,7 @@ export class HallScene extends Phaser.Scene {
   private lastSent = 0;
   private sent = { x: -1, y: -1 };
   private peekKey = '';
+  private peekAt = { x: -1, y: -1, booths: null as unknown };
   private offs: (() => void)[] = [];
 
   constructor() {
@@ -135,7 +136,16 @@ export class HallScene extends Phaser.Scene {
       this.conn.on('bubble', (m) => this.say(m)),
       this.conn.on('react', ({ sessionId, emoji }) => this.emote(sessionId, emoji)),
     );
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.offs.forEach((off) => off()));
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.dispose());
+    this.events.once(Phaser.Scenes.Events.DESTROY, () => this.dispose());
+  }
+
+  /**
+   * Unhooks the store and the room right away · game.destroy() is deferred to the next frame,
+   * and a store update in between would repaint a destroyed tilemap
+   */
+  dispose() {
+    for (const off of this.offs.splice(0)) off();
   }
 
   /** Zoom 0.9–2.6 · also used by the React zoom buttons */
@@ -164,6 +174,7 @@ export class HallScene extends Phaser.Scene {
         const r: Remote = {
           sprite: this.add.sprite(p.x, p.y, `c${p.avatar % CHAR_COUNT}`, 0).setOrigin(0.5, 0.92).setScale(SCALE),
           label: this.label(this.nameOf(p), false),
+          name: this.nameOf(p),
           ring: this.add.ellipse(p.x, p.y, 34, 14).setStrokeStyle(2, 0x33c27f).setVisible(false),
           snaps: [{ t: performance.now(), x: p.x, y: p.y }],
           avatar: p.avatar % CHAR_COUNT,
@@ -182,7 +193,12 @@ export class HallScene extends Phaser.Scene {
               if (r.snaps.length > MAX_SNAPSHOTS) r.snaps.shift();
             }
             r.dir = (p.dir as Dir) || r.dir;
-            r.label.setText(this.nameOf(p));
+            // re-rendering a Text texture is expensive: only when the name or badges change, not on every move
+            const name = this.nameOf(p);
+            if (name !== r.name) {
+              r.name = name;
+              r.label.setText(name);
+            }
           }),
         );
       }),
@@ -213,7 +229,7 @@ export class HallScene extends Phaser.Scene {
   }
 
   private renderBooths() {
-    if (!this.boothLayer) return;
+    if (!this.boothLayer?.scene || !this.floor?.layer) return;
     const booths = Object.values(useHall.getState().booths);
     const key = booths.map((b) => `${b.slotKey}:${b.zone}:${b.title}`).sort().join('|');
     if (key === this.boothKey) return;
@@ -311,6 +327,8 @@ export class HallScene extends Phaser.Scene {
   /** Standing next to a booth (not on its carpet): show its name, ● Live and how many are inside */
   private updatePeek(x: number, y: number) {
     const st = useHall.getState();
+    if (x === this.peekAt.x && y === this.peekAt.y && st.booths === this.peekAt.booths) return;
+    this.peekAt = { x, y, booths: st.booths };
     const slots = Object.values(st.booths)
       .map((b) => ({ b, s: this.slotByKey(b.slotKey) }))
       .filter((v): v is { b: BoothView & { sharing: boolean }; s: MapSlot } => !!v.s);

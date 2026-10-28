@@ -18,7 +18,10 @@ export default function HallGame({ conn, mapJson, title }: { conn: HallConnectio
       banner: false,
     });
     game.scene.add('hall', HallScene, true, { conn, mapJson, title });
-    return () => game.destroy(true);
+    return () => {
+      (game.scene.getScene('hall') as HallScene | null)?.dispose();
+      game.destroy(true);
+    };
     // one game per hall visit
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
